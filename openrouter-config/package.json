@@ -1,0 +1,12 @@
+{
+  "name": "openrouter-config",
+  "version": "1.0.0",
+  "description": "This directory contains a complete system for integrating OpenRouter's ultra-fast models (especially Cerebras at 600+ TPS) with Claude Code's parallel work manager for optimal development speed and cost efficiency.",
+  "main": "cost-optimization-tracker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

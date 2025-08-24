@@ -1,0 +1,170 @@
+{
+  "routing_strategy": "intelligent_auto",
+  "performance_targets": {
+    "speed_critical": {
+      "max_latency_ms": 500,
+      "target_tps": 600,
+      "cost_weight": 0.3,
+      "quality_weight": 0.7
+    },
+    "balanced": {
+      "max_latency_ms": 2000,
+      "target_tps": 100,
+      "cost_weight": 0.5,
+      "quality_weight": 0.5
+    },
+    "quality_critical": {
+      "max_latency_ms": 10000,
+      "target_tps": 20,
+      "cost_weight": 0.2,
+      "quality_weight": 0.8
+    }
+  },
+  "models": {
+    "cerebras_llama3_1_8b": {
+      "provider": "openrouter",
+      "model_id": "cerebras/llama3.1-8b",
+      "tps": 650,
+      "cost_per_1k_input": 0.10,
+      "cost_per_1k_output": 0.10,
+      "context_length": 128000,
+      "strengths": ["speed", "code_generation", "simple_tasks", "refactoring"],
+      "weaknesses": ["complex_reasoning", "edge_cases"],
+      "use_cases": [
+        "simple_crud_operations",
+        "basic_validation",
+        "code_formatting",
+        "template_generation",
+        "quick_fixes",
+        "repetitive_tasks"
+      ]
+    },
+    "cerebras_llama3_1_70b": {
+      "provider": "openrouter", 
+      "model_id": "cerebras/llama3.1-70b",
+      "tps": 400,
+      "cost_per_1k_input": 0.60,
+      "cost_per_1k_output": 0.60,
+      "context_length": 128000,
+      "strengths": ["speed", "balanced_intelligence", "code_quality"],
+      "weaknesses": ["highest_cost_tier"],
+      "use_cases": [
+        "moderate_complexity_features",
+        "api_development",
+        "business_logic",
+        "integration_tasks"
+      ]
+    },
+    "claude_code": {
+      "provider": "claude_code_subscription",
+      "model_id": "claude-sonnet-4-20250514",
+      "tps": 30,
+      "cost_per_1k_input": 0.00,
+      "cost_per_1k_output": 0.00,
+      "context_length": 500000,
+      "strengths": ["superior_reasoning", "complex_analysis", "architecture", "debugging", "quality_assurance", "strategic_planning"],
+      "weaknesses": ["speed_for_simple_tasks"],
+      "use_cases": [
+        "all_reasoning_tasks",
+        "complex_architecture",
+        "debugging_difficult_issues", 
+        "security_analysis",
+        "performance_optimization",
+        "code_review",
+        "strategic_planning",
+        "problem_analysis",
+        "quality_assurance",
+        "integration_review"
+      ]
+    },
+    "claude_3_5_sonnet": {
+      "provider": "anthropic",
+      "model_id": "claude-3-5-sonnet-20241022",
+      "tps": 25,
+      "cost_per_1k_input": 3.00,
+      "cost_per_1k_output": 15.00,
+      "context_length": 200000,
+      "strengths": ["complex_reasoning", "edge_cases", "architecture", "debugging"],
+      "weaknesses": ["speed", "cost", "inferior_to_claude_code"],
+      "use_cases": [
+        "fallback_for_claude_code_unavailable"
+      ]
+    },
+    "gpt_4o_mini": {
+      "provider": "openai",
+      "model_id": "gpt-4o-mini",
+      "tps": 80,
+      "cost_per_1k_input": 0.15,
+      "cost_per_1k_output": 0.60,
+      "context_length": 128000,
+      "strengths": ["balanced_cost_performance", "reliable"],
+      "weaknesses": ["moderate_speed"],
+      "use_cases": [
+        "standard_development_tasks",
+        "documentation",
+        "testing",
+        "moderate_complexity"
+      ]
+    },
+    "o1_mini": {
+      "provider": "openai",
+      "model_id": "o1-mini",
+      "tps": 5,
+      "cost_per_1k_input": 3.00,
+      "cost_per_1k_output": 12.00,
+      "context_length": 128000,
+      "strengths": ["deep_reasoning", "complex_problem_solving", "algorithms"],
+      "weaknesses": ["very_slow", "expensive"],
+      "use_cases": [
+        "algorithm_design",
+        "complex_mathematical_problems",
+        "deep_architectural_decisions",
+        "optimization_challenges"
+      ]
+    }
+  },
+  "task_classification": {
+    "simple_coding": {
+      "keywords": ["crud", "form", "validation", "template", "formatting", "basic"],
+      "complexity_score": 1,
+      "preferred_models": ["cerebras_llama3_1_8b"],
+      "fallback_models": ["gpt_4o_mini"]
+    },
+    "moderate_coding": {
+      "keywords": ["api", "integration", "business_logic", "feature", "service"],
+      "complexity_score": 3,
+      "preferred_models": ["cerebras_llama3_1_70b", "gpt_4o_mini"],
+      "fallback_models": ["claude_3_5_sonnet"]
+    },
+    "complex_logic": {
+      "keywords": ["architecture", "design", "complex", "algorithm", "performance"],
+      "complexity_score": 7,
+      "preferred_models": ["claude_code"],
+      "fallback_models": ["o1_mini", "claude_3_5_sonnet"]
+    },
+    "deep_reasoning": {
+      "keywords": ["optimize", "algorithm", "mathematical", "research", "analysis", "reasoning", "problem", "debug", "review"],
+      "complexity_score": 9,
+      "preferred_models": ["claude_code"],
+      "fallback_models": ["o1_mini", "claude_3_5_sonnet"]
+    }
+  },
+  "routing_rules": {
+    "speed_first": {
+      "conditions": ["time_sensitive", "simple_task", "parallel_execution"],
+      "model_priority": ["cerebras_llama3_1_8b", "cerebras_llama3_1_70b", "gpt_4o_mini"]
+    },
+    "cost_optimized": {
+      "conditions": ["high_volume", "routine_tasks", "budget_conscious"],
+      "model_priority": ["cerebras_llama3_1_8b", "gpt_4o_mini", "cerebras_llama3_1_70b"]
+    },
+    "quality_first": {
+      "conditions": ["critical_feature", "production_code", "security_sensitive"],
+      "model_priority": ["claude_code", "o1_mini", "claude_3_5_sonnet"]
+    },
+    "reasoning_first": {
+      "conditions": ["analysis_needed", "complex_problem", "debugging", "architecture", "planning"],
+      "model_priority": ["claude_code", "o1_mini", "claude_3_5_sonnet"]
+    }
+  }
+}
