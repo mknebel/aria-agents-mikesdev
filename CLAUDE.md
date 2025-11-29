@@ -59,6 +59,12 @@ Routing:
 - Use absolute paths
 - If relative fails → Glob ONCE → ask user if still not found
 
+## Response Efficiency
+- Search results: Max 20 files, 5 context lines each
+- Explanations: Concise unless user asks for detail
+- Tables over prose for structured data
+- Skip obvious/redundant information
+
 ## Bash Efficiency
 - Chain related commands with && in ONE Bash call
 - Pre-check requirements before operations that might fail (e.g., git config before commit)
