@@ -27,6 +27,23 @@ Search(pattern: "...", path: "...", output_mode: "content")
 - NEVER Read after searching - -C:10 context should be enough
 - If you must Read, run multiple in parallel (one message)
 - Use offset/limit for large files when you know line range
+- For files >500 lines: use limit:200 centered on area of interest
+
+## Search Result Limits
+- Use head_limit:50 for discovery searches (finding files)
+- Use head_limit:100 for content searches (reading code)
+- Use output_mode:"files_with_matches" for "what files contain X" questions
+- Use output_mode:"content" only when you need the actual code
+
+## Edit Efficiency
+- Use MultiEdit for 2+ changes in same file (one call vs multiple)
+- Batch related file changes in parallel Edit calls (one message)
+- Don't Read before Write if creating new file or full replacement
+
+## Agent Routing (Cost Optimization)
+- Simple searches/discovery → Explore agent (faster, cheaper)
+- Complex analysis → Main Claude (better reasoning)
+- Bulk file operations → parallel-work-manager agents
 
 ## Path Discovery
 - Use absolute paths

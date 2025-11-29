@@ -20,6 +20,16 @@
             "timeout": 60
           }
         ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/mike/.claude/hooks/limit-large-reads.sh",
+            "timeout": 60
+          }
+        ]
       }
     ]
   },
