@@ -3,27 +3,23 @@
 
 INPUT=$(cat)
 
-# Debug logging
-echo "=== $(date) ===" >> /tmp/hook-debug.log
-echo "INPUT: $INPUT" >> /tmp/hook-debug.log
-
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty')
 TOOL_INPUT=$(echo "$INPUT" | jq -c '.tool_input // {}')
 
-echo "TOOL_NAME: $TOOL_NAME" >> /tmp/hook-debug.log
+# Debug logging (optional)
+echo "$(date): $TOOL_NAME" >> /tmp/hook-debug.log
 
 if [[ "$TOOL_NAME" == "Grep" ]]; then
     HAS_CONTEXT=$(echo "$TOOL_INPUT" | jq 'has("-C")')
-    echo "HAS_CONTEXT: $HAS_CONTEXT" >> /tmp/hook-debug.log
 
     if [[ "$HAS_CONTEXT" == "false" ]]; then
-        UPDATED_INPUT=$(echo "$TOOL_INPUT" | jq -c '. + {"-C": 10}')
-        echo "OUTPUT (modified): {\"decision\":\"allow\",\"updatedInput\":$UPDATED_INPUT}" >> /tmp/hook-debug.log
-        echo "{\"decision\":\"allow\",\"updatedInput\":$UPDATED_INPUT}"
+        UPDATED=$(echo "$TOOL_INPUT" | jq -c '. + {"-C": 10}')
+        cat <<EOF
+{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","updatedInput":$UPDATED}}
+EOF
         exit 0
     fi
 fi
 
-echo "OUTPUT: {\"decision\":\"allow\"}" >> /tmp/hook-debug.log
-echo '{"decision":"allow"}'
+echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}'
 exit 0
