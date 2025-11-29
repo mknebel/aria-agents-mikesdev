@@ -8,6 +8,11 @@
             "type": "command",
             "command": "/home/mike/.claude/hooks/auto-route-query.sh",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "/home/mike/.claude/hooks/auto-index-project.sh",
+            "timeout": 10
           }
         ]
       }
