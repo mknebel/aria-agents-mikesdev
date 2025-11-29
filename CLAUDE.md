@@ -31,3 +31,11 @@ Search(pattern: "...", path: "...", output_mode: "content")
 ## Path Discovery
 - Use absolute paths
 - If relative fails → Glob ONCE → ask user if still not found
+
+## Bash Efficiency
+- Chain related commands with && in ONE Bash call
+- Pre-check requirements before operations that might fail (e.g., git config before commit)
+- Use absolute paths to avoid cd (working directory resets after each call)
+- For git workflows: init + config + add + commit + push in ONE chained command
+- WRONG: 5 sequential Bash calls for git operations
+- RIGHT: `git add -A && git commit -m "msg" && git push` in one call
