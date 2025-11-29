@@ -1,13 +1,15 @@
 #!/bin/bash
 # Build Project Index - Pre-scans project files for fast lookups
-# Usage: build-project-index.sh /path/to/project
+# Usage: build-project-index.sh /path/to/project [--full]
 #
+# Supports incremental indexing - only rebuilds if files changed
 # Uses ripgrep (rg) which automatically respects .gitignore
 # Excludes: .git, node_modules, vendor, images, PDFs, binaries
 
 set -e
 
 PROJECT_ROOT="${1:-.}"
+FORCE_FULL="${2:-}"
 PROJECT_ROOT=$(cd "$PROJECT_ROOT" && pwd)  # Absolute path
 
 # Generate index name from path
@@ -17,20 +19,11 @@ OUTPUT_FILE="$OUTPUT_DIR/${INDEX_NAME}.json"
 
 mkdir -p "$OUTPUT_DIR"
 
-echo "Building index for: $PROJECT_ROOT"
-echo "Output: $OUTPUT_FILE"
-
 # Check for ripgrep
 if ! command -v rg &> /dev/null; then
     echo "Error: ripgrep (rg) is required. Install with: apt install ripgrep"
     exit 1
 fi
-
-# Common rg options:
-# --files: list files only
-# --type: filter by file type
-# --glob: include/exclude patterns
-# Automatically respects .gitignore and excludes .git/
 
 # Build exclusion list
 RG_EXCLUDE=""
@@ -73,6 +66,30 @@ RG_EXCLUDE+=" --glob '!*.bak' --glob '!*_bak*' --glob '!*.backup' --glob '!*_bac
 
 # OS junk
 RG_EXCLUDE+=" --glob '!.DS_Store' --glob '!Thumbs.db'"
+
+# --- INCREMENTAL INDEXING ---
+
+# Check if we can skip rebuild based on file changes
+if [[ -f "$OUTPUT_FILE" && "$FORCE_FULL" != "--full" ]]; then
+    INDEX_TIME=$(stat -c %Y "$OUTPUT_FILE" 2>/dev/null || echo 0)
+    INDEX_AGE=$(( $(date +%s) - INDEX_TIME ))
+
+    # Find any files modified since index was built
+    CHANGED_FILES=$(find "$PROJECT_ROOT" -type f \( -name "*.php" -o -name "*.js" -o -name "*.ts" \) -newer "$OUTPUT_FILE" 2>/dev/null | grep -v node_modules | grep -v vendor | head -1)
+
+    if [[ -z "$CHANGED_FILES" && $INDEX_AGE -lt 86400 ]]; then
+        echo "Index up-to-date (no changes since last build)"
+        echo "  Files: $(jq '.file_count' "$OUTPUT_FILE" 2>/dev/null)"
+        echo "  Age: $((INDEX_AGE / 60)) minutes"
+        echo "  Use --full to force rebuild"
+        exit 0
+    fi
+fi
+
+echo "Building index for: $PROJECT_ROOT"
+echo "Output: $OUTPUT_FILE"
+
+# --- FULL INDEX BUILD ---
 
 # Start JSON
 cat > "$OUTPUT_FILE" << EOF
