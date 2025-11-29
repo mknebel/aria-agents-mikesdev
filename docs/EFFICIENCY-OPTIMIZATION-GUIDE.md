@@ -13,6 +13,7 @@ These work automatically in every new session:
 - ✅ **Grep/Search** → Hook auto-adds `-C:10` context
 - ✅ **Read large files** → Hook auto-limits to 300 lines
 - ✅ **CLAUDE.md rules** → Loaded automatically from `~/.claude/`
+- ✅ **Auto-routing** → Search queries auto-route to Gemini (cheapest)
 
 ### Manual Commands Available
 Type these in any session:
@@ -77,6 +78,13 @@ Claude Code's default behavior was inefficient:
 - **Trigger:** Every Read call
 - **Action:** Adds `limit:300` for files >500 lines
 - **Result:** Prevents token waste on large files
+
+#### auto-route-query.sh
+- **Trigger:** Every user prompt (UserPromptSubmit)
+- **Action:** Detects search queries, routes to Gemini agent
+- **Keywords:** find, search, where is, list all, show me, locate, look for
+- **Excludes:** implement, write code, create, fix, add feature
+- **Result:** Auto-uses cheapest model for search tasks (~$0.02 vs $0.09)
 
 ### 2. CLAUDE.md Rules
 
