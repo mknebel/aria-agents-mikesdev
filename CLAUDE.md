@@ -41,8 +41,18 @@ Search(pattern: "...", path: "...", output_mode: "content")
 - Don't Read before Write if creating new file or full replacement
 
 ## Agent Routing (Cost Optimization)
-- Simple searches/discovery → Explore agent (faster, cheaper)
-- Complex analysis → Main Claude (better reasoning)
+
+| Task | Best Model | Why |
+|------|------------|-----|
+| Simple search | Gemini/Haiku | Fast, cheap, follows patterns |
+| Complex analysis | Opus | Better reasoning |
+| Code generation | Codex/Opus | Quality + speed |
+| Bulk discovery | Gemini | Speed + cost |
+
+Routing:
+- Simple searches/discovery → Explore agent or parallel-work-manager-fast (Gemini)
+- Complex analysis/architecture → Main Claude Opus
+- Code generation → Codex or Opus
 - Bulk file operations → parallel-work-manager agents
 
 ## Path Discovery
