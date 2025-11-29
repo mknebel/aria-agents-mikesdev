@@ -79,6 +79,16 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/mike/.claude/hooks/log-file-changes.sh",
+            "timeout": 10
+          }
+        ]
       }
     ]
   },
