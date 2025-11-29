@@ -6,6 +6,38 @@
 
 ---
 
+## How to Use in New Sessions
+
+### Automatic (No Action Needed)
+These work automatically in every new session:
+- ✅ **Grep/Search** → Hook auto-adds `-C:10` context
+- ✅ **Read large files** → Hook auto-limits to 300 lines
+- ✅ **CLAUDE.md rules** → Loaded automatically from `~/.claude/`
+
+### Manual Commands Available
+Type these in any session:
+```
+/search <query>           → Efficient parallel search
+/efficient-search <query> → Routes to Gemini (cheapest)
+/find-files <pattern>     → File paths only, no content
+/code <query>             → Quick code lookup with context
+/bulk-edit <description>  → Multi-file efficient editing
+/structure [path]         → Project structure overview
+/git-sync "message"       → Add + commit + push in one call
+```
+
+### Verify It's Working
+After any search, run in terminal:
+```bash
+cat /tmp/hook-debug.log
+```
+Should show hooks firing with `HAS_CONTEXT: true`
+
+### If Commands Not Found
+Restart Claude Code - new commands discovered at startup.
+
+---
+
 ## Executive Summary
 
 Implemented efficiency optimizations reducing Claude Code tool calls by **80%**, costs by **93%**, and improving output quality.
