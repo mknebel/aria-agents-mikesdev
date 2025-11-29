@@ -31,7 +31,48 @@ fi
 # --type: filter by file type
 # --glob: include/exclude patterns
 # Automatically respects .gitignore and excludes .git/
-RG_EXCLUDE="--glob '!*.png' --glob '!*.jpg' --glob '!*.jpeg' --glob '!*.gif' --glob '!*.ico' --glob '!*.svg' --glob '!*.webp' --glob '!*.bmp' --glob '!*.pdf' --glob '!*.zip' --glob '!*.tar' --glob '!*.gz' --glob '!*.exe' --glob '!*.dll' --glob '!*.so' --glob '!*.dylib' --glob '!*.woff' --glob '!*.woff2' --glob '!*.ttf' --glob '!*.eot' --glob '!*.mp3' --glob '!*.mp4' --glob '!*.wav' --glob '!*.avi' --glob '!*.mov'"
+
+# Build exclusion list
+RG_EXCLUDE=""
+
+# Images
+RG_EXCLUDE+=" --glob '!*.png' --glob '!*.jpg' --glob '!*.jpeg' --glob '!*.gif'"
+RG_EXCLUDE+=" --glob '!*.ico' --glob '!*.svg' --glob '!*.webp' --glob '!*.bmp'"
+
+# Documents & Archives
+RG_EXCLUDE+=" --glob '!*.pdf' --glob '!*.zip' --glob '!*.tar' --glob '!*.gz' --glob '!*.rar' --glob '!*.7z'"
+
+# Binaries
+RG_EXCLUDE+=" --glob '!*.exe' --glob '!*.dll' --glob '!*.so' --glob '!*.dylib'"
+
+# Fonts
+RG_EXCLUDE+=" --glob '!*.woff' --glob '!*.woff2' --glob '!*.ttf' --glob '!*.eot'"
+
+# Media
+RG_EXCLUDE+=" --glob '!*.mp3' --glob '!*.mp4' --glob '!*.wav' --glob '!*.avi' --glob '!*.mov' --glob '!*.webm'"
+
+# Lock files
+RG_EXCLUDE+=" --glob '!package-lock.json' --glob '!composer.lock' --glob '!yarn.lock' --glob '!Gemfile.lock' --glob '!pnpm-lock.yaml'"
+
+# Minified & Build artifacts
+RG_EXCLUDE+=" --glob '!*.min.js' --glob '!*.min.css' --glob '!*.map'"
+RG_EXCLUDE+=" --glob '!**/dist/**' --glob '!**/build/**' --glob '!**/.next/**' --glob '!**/.nuxt/**'"
+RG_EXCLUDE+=" --glob '!**/bundle.js' --glob '!**/vendor.js' --glob '!**/chunk-*.js'"
+
+# IDE/Editor
+RG_EXCLUDE+=" --glob '!**/.idea/**' --glob '!**/.vscode/**' --glob '!*.swp' --glob '!*.swo'"
+
+# Data files
+RG_EXCLUDE+=" --glob '!*.sql' --glob '!*.sqlite' --glob '!*.db' --glob '!*.csv'"
+
+# Archive/Backup folders and files
+RG_EXCLUDE+=" --glob '!**/_archive/**' --glob '!**/archive/**' --glob '!**/Archive/**'"
+RG_EXCLUDE+=" --glob '!**/_backup/**' --glob '!**/backup/**' --glob '!**/Backup/**'"
+RG_EXCLUDE+=" --glob '!*archive*' --glob '!*Archive*'"
+RG_EXCLUDE+=" --glob '!*.bak' --glob '!*_bak*' --glob '!*.backup' --glob '!*_backup*' --glob '!*.old'"
+
+# OS junk
+RG_EXCLUDE+=" --glob '!.DS_Store' --glob '!Thumbs.db'"
 
 # Start JSON
 cat > "$OUTPUT_FILE" << EOF
