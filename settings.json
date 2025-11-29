@@ -1,0 +1,30 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/enforce-grep-context.sh",
+            "timeout": 60
+          }
+        ]
+      },
+      {
+        "matcher": "Search",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/enforce-grep-context.sh",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-code-plugins": true
+  },
+  "alwaysThinkingEnabled": true
+}

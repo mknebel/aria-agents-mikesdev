@@ -1,0 +1,28 @@
+# Credentials - NEVER commit
+.credentials.json
+credentials.json
+
+# Runtime data
+history.jsonl
+file-history/
+debug/
+plans/
+projects/
+session-env/
+shell-snapshots/
+statsig/
+todos/
+
+# Large/temporary
+*.log
+*.tmp
+
+# Keep these (explicitly)
+# !CLAUDE.md
+# !settings.json
+# !config.json
+# !hooks/
+# !commands/
+# !agents/
+# !docs/
+# !skills/
