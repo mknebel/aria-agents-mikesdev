@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/enforce-grep-context.sh",
+            "command": "/home/mike/.claude/hooks/enforce-grep-context.sh",
             "timeout": 60
           }
         ]
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/enforce-grep-context.sh",
+            "command": "/home/mike/.claude/hooks/enforce-grep-context.sh",
             "timeout": 60
           }
         ]
