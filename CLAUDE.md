@@ -1,74 +1,36 @@
-## Search Efficiency (MANDATORY - NEVER IGNORE)
+# Global Claude Code Rules
 
-EVERY Grep/Search call MUST include:
+## Automated (Hooks Handle These)
+- ✅ Grep context (-C:10) - auto-added
+- ✅ Large file limits (300 lines) - auto-enforced
+- ✅ Search caching - automatic
+- ✅ Token tracking - automatic
+- ✅ Project indexing - auto on first prompt
+
+## Manual Efficiency Rules
+
+### Searching
+- Combine patterns: `(term1|term2|term3)` - ONE search
+- Parallel calls in ONE message for different paths
+- Use `output_mode:"files_with_matches"` for discovery
+- Max 3 tool calls per search task
+
+### Editing
+- MultiEdit for 2+ changes in same file
+- Parallel Edit calls for multiple files
+- Don't Read before Write for new files
+
+### Bash
+- Chain with `&&`: `git add -A && git commit -m "msg" && git push`
+- Use absolute paths (cwd resets between calls)
+
+## Quick Commands
 ```
--C: 10          ← REQUIRED, never omit
-output_mode: "content"  ← REQUIRED
-glob: "*.php"   ← when searching code
+/menu          - Your command menu
+/cost-report   - Token usage
+/index-project - Rebuild index
+/summarize     - Session handoff
 ```
 
-Rules:
-1. Combine patterns: `(term1|term2|term3)` - ONE search, not multiple
-2. Parallel paths: Multiple Grep calls in ONE message for different directories
-3. Maximum 3 tool calls for any search task
-4. If path fails, Glob ONCE to find it - don't retry variations
-
-CORRECT:
-```
-Grep(pattern: "(adnpayment|chargeCustomerProfile)", path: "/full/path", -C: 10, output_mode: "content", glob: "*.php")
-```
-
-WRONG (missing -C - will need follow-up Reads):
-```
-Search(pattern: "...", path: "...", output_mode: "content")
-```
-
-## Read Efficiency
-- NEVER Read after searching - -C:10 context should be enough
-- If you must Read, run multiple in parallel (one message)
-- Use offset/limit for large files when you know line range
-- For files >500 lines: use limit:200 centered on area of interest
-
-## Search Result Limits
-- Use head_limit:50 for discovery searches (finding files)
-- Use head_limit:100 for content searches (reading code)
-- Use output_mode:"files_with_matches" for "what files contain X" questions
-- Use output_mode:"content" only when you need the actual code
-
-## Edit Efficiency
-- Use MultiEdit for 2+ changes in same file (one call vs multiple)
-- Batch related file changes in parallel Edit calls (one message)
-- Don't Read before Write if creating new file or full replacement
-
-## Agent Routing (Cost Optimization)
-
-| Task | Best Model | Why |
-|------|------------|-----|
-| Simple search | Gemini/Haiku | Fast, cheap, follows patterns |
-| Complex analysis | Opus | Better reasoning |
-| Code generation | Codex/Opus | Quality + speed |
-| Bulk discovery | Gemini | Speed + cost |
-
-Routing:
-- Simple searches/discovery → Explore agent or parallel-work-manager-fast (Gemini)
-- Complex analysis/architecture → Main Claude Opus
-- Code generation → Codex or Opus
-- Bulk file operations → parallel-work-manager agents
-
-## Path Discovery
-- Use absolute paths
-- If relative fails → Glob ONCE → ask user if still not found
-
-## Response Efficiency
-- Search results: Max 20 files, 5 context lines each
-- Explanations: Concise unless user asks for detail
-- Tables over prose for structured data
-- Skip obvious/redundant information
-
-## Bash Efficiency
-- Chain related commands with && in ONE Bash call
-- Pre-check requirements before operations that might fail (e.g., git config before commit)
-- Use absolute paths to avoid cd (working directory resets after each call)
-- For git workflows: init + config + add + commit + push in ONE chained command
-- WRONG: 5 sequential Bash calls for git operations
-- RIGHT: `git add -A && git commit -m "msg" && git push` in one call
+## Project-Specific
+See each project's CLAUDE.md for local rules.
