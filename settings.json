@@ -20,6 +20,16 @@
             "type": "command",
             "command": "/home/mike/.claude/hooks/enforce-grep-context.sh",
             "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "/home/mike/.claude/hooks/use-project-index.sh",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "/home/mike/.claude/hooks/search-cache-check.sh",
+            "timeout": 30
           }
         ]
       },
@@ -40,6 +50,28 @@
             "type": "command",
             "command": "/home/mike/.claude/hooks/limit-large-reads.sh",
             "timeout": 60
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/mike/.claude/hooks/track-usage.sh",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/mike/.claude/hooks/search-cache-store.sh",
+            "timeout": 30
           }
         ]
       }

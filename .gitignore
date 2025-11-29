@@ -12,6 +12,9 @@ session-env/
 shell-snapshots/
 statsig/
 todos/
+logs/
+cache/
+project-indexes/
 
 # Large/temporary
 *.log
