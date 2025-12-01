@@ -6,6 +6,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "/home/mike/.claude/hooks/enforce-agent-delegation.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
             "command": "/home/mike/.claude/hooks/auto-route-query.sh",
             "timeout": 30
           },
