@@ -11,4 +11,5 @@ if [[ -z "$PROMPT" ]]; then
   exit 1
 fi
 
-exec /home/mike/.claude/scripts/call-openrouter.sh "qwen/qwen3-coder:free" "$PROMPT" "$MAX_TOKENS"
+# Try free first, fallback to paid
+exec /home/mike/.claude/scripts/call-openrouter.sh "google/gemini-2.0-flash-001" "$PROMPT" "$MAX_TOKENS"
