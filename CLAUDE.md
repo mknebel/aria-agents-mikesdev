@@ -20,6 +20,8 @@ Check `~/.claude/routing-mode` for current mode. Default is **fast** (external t
 | Complex code | Codex (FREE) | `codex "implement..."` |
 | Code review | Codex (FREE) | `codex "review..."` |
 | Write tests | Codex (FREE) | `codex "write tests..."` |
+| Browser/UI | Playwright | `browser-agent.sh "task"` |
+| Screenshot | Playwright | `browser.sh screenshot <url>` |
 
 **Run these via the Bash tool.** They use your existing subscriptions (Google, GPT) - not Claude tokens.
 
@@ -73,6 +75,46 @@ This saves ~80% tokens on multi-step workflows.
 | Edit | Use MultiEdit for same file |
 | Bash | Chain with `&&`, absolute paths |
 | Large outputs | Reference `$tool_last` instead of re-outputting |
+
+## Browser Automation
+
+Use `browser-agent.sh` for agentic browser testing (LLM-driven) or `browser.sh` for direct commands.
+
+### Agentic Browser Testing (LLM decides steps)
+```bash
+browser-agent.sh "task description"              # Headless
+browser-agent.sh visible "task description"      # Watch it run
+ai.sh agent "task description"                   # Alias
+```
+
+Examples:
+```bash
+browser-agent.sh "go to http://localhost/app and get the title"
+browser-agent.sh "login to site, take a screenshot, verify dashboard"
+browser-agent.sh visible "test the signup form"
+```
+
+### Direct Browser Commands
+```bash
+browser.sh url <url>                    # Navigate, get HTML
+browser.sh screenshot <url> [path]      # Take screenshot
+browser.sh video <url> [dir]            # Record video
+browser.sh visible                      # Set visible mode (persistent)
+browser.sh headless                     # Set headless mode (persistent)
+browser.sh status                       # Show current mode
+```
+
+### Output Locations
+| Type | Location |
+|------|----------|
+| Screenshots | `~/.claude/browser-screenshots/` |
+| Videos | `~/.claude/browser-videos/` |
+| Agent logs | `/tmp/claude_vars/browser-agent.log` |
+| HTML output | `/tmp/claude_vars/browser_last` |
+
+### When to Use
+- **browser-agent.sh**: Complex multi-step tasks, form testing, user flows
+- **browser.sh**: Quick screenshots, simple navigation, video recording
 
 ## Commands
 `/mode` `/menu` `/cost-report` `/fast` `/index-project`

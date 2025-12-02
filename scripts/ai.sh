@@ -83,6 +83,11 @@ case "$TOOL" in
         call_openrouter "@preset/browser-agent-tools-only" "$PROMPT" "🌐 Browser preset..."
         ;;
 
+    agent|browser-agent)
+        # Full agentic browser automation with persistent session
+        ~/.claude/scripts/browser-agent.sh "$PROMPT"
+        ;;
+
     *)
         cat << 'HELP'
 AI Tool - Unified Interface
