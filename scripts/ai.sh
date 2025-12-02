@@ -88,6 +88,26 @@ case "$TOOL" in
         ~/.claude/scripts/browser-agent.sh "$PROMPT"
         ;;
 
+    search|grep|find)
+        # Search codebase and analyze with LLM
+        # Usage: ai.sh search "pattern" [path]
+        PATTERN="$1"
+        shift
+        ROOT="${1:-.}"
+        echo "🔍 Searching: $PATTERN in $ROOT" >&2
+        SEARCH_RESULTS=$(~/.claude/scripts/search.sh "$PATTERN" "$ROOT" 2>/dev/null | head -100)
+        if [ -z "$SEARCH_RESULTS" ]; then
+            echo "No matches found for: $PATTERN"
+            exit 0
+        fi
+        COMBINED="Analyze these search results for '$PATTERN' and summarize:
+
+$SEARCH_RESULTS
+
+List: file:line - what it does"
+        call_openrouter "@preset/general-non-browser-tools" "$COMBINED" "🔧 Analyzing matches..."
+        ;;
+
     *)
         cat << 'HELP'
 AI Tool - Unified Interface
@@ -103,6 +123,10 @@ OpenRouter:
   qa      - QA/Doc preset (test logs, docs)
   tools   - Qwen Coder (implementation)
   browser - DeepSeek (UI automation prompts)
+
+Agents:
+  search  - Search codebase + analyze (ai.sh search "pattern" [path])
+  agent   - Browser automation (ai.sh agent "task")
 
 Output: /tmp/claude_vars/{tool}_last
 HELP

@@ -1,0 +1,21 @@
+{
+  "type": "function",
+  "function": {
+    "name": "code_search",
+    "description": "Search codebase with ripgrep and return matching lines.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "pattern": {
+          "type": "string",
+          "description": "Regex or literal string to search for."
+        },
+        "root": {
+          "type": "string",
+          "description": "Root directory to search (default: current repo)."
+        }
+      },
+      "required": ["pattern"]
+    }
+  }
+}
