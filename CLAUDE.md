@@ -22,6 +22,7 @@ Check `~/.claude/routing-mode` for current mode. Default is **fast** (external t
 | Write tests | Codex (FREE) | `codex "write tests..."` |
 | Smart search | DeepSeek/Gemini | `smart-search.sh "query" path` |
 | Smart read | DeepSeek/Gemini | `smart-read.sh file "question"` |
+| Tools agent | DeepSeek | `ai.sh tools "task"` (search+read+list) |
 | Browser/UI | Playwright | `browser-agent.sh "task"` |
 | Screenshot | Playwright | `browser.sh screenshot <url>` |
 

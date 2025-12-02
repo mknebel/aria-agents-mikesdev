@@ -88,6 +88,11 @@ case "$TOOL" in
         ~/.claude/scripts/browser-agent.sh "$PROMPT"
         ;;
 
+    tools|explore)
+        # Tools agent - LLM with search/read/list tools
+        ~/.claude/scripts/tools-agent.sh "$PROMPT"
+        ;;
+
     search|grep|find)
         # Search codebase and analyze with LLM
         # Usage: ai.sh search "pattern" [path]
@@ -125,8 +130,9 @@ OpenRouter:
   browser - DeepSeek (UI automation prompts)
 
 Agents:
-  search  - Search codebase + analyze (ai.sh search "pattern" [path])
-  agent   - Browser automation (ai.sh agent "task")
+  tools   - Code explorer (search/read/list tools)
+  search  - Search codebase + analyze
+  agent   - Browser automation
 
 Output: /tmp/claude_vars/{tool}_last
 HELP
