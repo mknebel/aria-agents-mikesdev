@@ -24,6 +24,16 @@
     ],
     "PreToolUse": [
       {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/mike/.claude/hooks/compress-prompt.sh",
+            "timeout": 5
+          }
+        ]
+      },
+      {
         "matcher": "Grep",
         "hooks": [
           {
@@ -40,6 +50,11 @@
             "type": "command",
             "command": "/home/mike/.claude/hooks/search-cache-check.sh",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "/home/mike/.claude/hooks/semantic-cache.sh",
+            "timeout": 5
           }
         ]
       },
@@ -60,6 +75,11 @@
             "type": "command",
             "command": "/home/mike/.claude/hooks/limit-large-reads.sh",
             "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "/home/mike/.claude/hooks/file-cache.sh",
+            "timeout": 5
           }
         ]
       }
@@ -72,6 +92,16 @@
             "type": "command",
             "command": "/home/mike/.claude/hooks/track-usage.sh",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "/home/mike/.claude/hooks/var-store.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "/home/mike/.claude/hooks/short-response.sh",
+            "timeout": 5
           }
         ]
       },

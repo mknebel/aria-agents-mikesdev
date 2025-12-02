@@ -9,6 +9,24 @@ tools: Read, Write, Edit, Bash, Grep, Glob, LS, TodoWrite
 
 Quality assurance specialist handling testing, validation, bug detection, and code quality.
 
+## External Tools (Use First - Saves Claude Tokens)
+
+Check `~/.claude/routing-mode` for current mode.
+
+| Task | Tool | Command |
+|------|------|---------|
+| Code generation | Codex | `codex "implement..."` |
+| Large file analysis | Gemini | `gemini "analyze" @file` |
+| Quick generation | OpenRouter | `ai.sh fast "prompt"` |
+| Search codebase | Gemini | `gemini "find..." @.` |
+
+## Variable References (Pass-by-Reference)
+
+Use variable references instead of re-outputting large data:
+- `$grep_last` or `/tmp/claude_vars/grep_last` - last grep result
+- `$read_last` or `/tmp/claude_vars/read_last` - last read result
+- Say "analyze the data in $grep_last" instead of repeating content
+
 ## CRITICAL: Use MiniMax M2 for Test Generation
 
 **MiniMax M2 has best test quality (69.4% SWE-bench, 46.3% Terminal-Bench).**

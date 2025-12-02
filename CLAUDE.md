@@ -1,39 +1,71 @@
 # Global Rules - FOLLOW STRICTLY
 
-## CRITICAL: Use Aria Agent System
-**ALWAYS delegate tasks to subagents to reduce token usage on Claude.**
+## CRITICAL: Use External Tools First (Saves Claude Tokens)
 
-| Task Type | Subagent | Why |
-|-----------|----------|-----|
-| Coding/implementation | `aria-coder` | Full-stack dev |
-| Code exploration | `Explore` | Fast file/code search |
-| Testing/QA | `aria-qa` | Validation, bugs |
-| Git/admin tasks | `aria-admin` | Changelogs, commits |
-| Documentation | `aria-docs` | Docs, worklogs |
-| Architecture questions | `aria-architect` | System design |
-| Security review | `code-review` | Before commits |
-| Complex routing | `aria` | Main orchestrator |
+Check `~/.claude/routing-mode` for current mode. Default is **fast** (external tools).
 
-**How**: Use Task tool with `subagent_type` parameter. Spawn agents in parallel when possible.
+### Fast Mode (Default) - Use External Tools via Bash
 
-**Claude direct use ONLY for**: Quick answers, clarifications, planning decisions, user interaction.
+| Task Type | Tool | Command |
+|-----------|------|---------|
+| Search/Analysis | Gemini (FREE) | `gemini "query" @files` |
+| Simple code | OpenRouter | `ai.sh fast "prompt"` |
+| Complex code | Codex (FREE) | `codex "implement..."` |
+| Code review | Codex (FREE) | `codex "review..."` |
+| Write tests | Codex (FREE) | `codex "write tests..."` |
 
-## CRITICAL: Avoid Redundant Tool Calls
-1. **NEVER make duplicate searches** - if you already searched for something, don't search again
-2. **Combine search patterns**: Use `(pattern1|pattern2|pattern3)` instead of 3 separate calls
-3. **Max 3 search calls** per task before synthesizing results
-4. **Read files once** - don't re-read the same file in one session
+**Run these via the Bash tool.** They use your existing subscriptions (Google, GPT) - not Claude tokens.
+
+### Aria Mode (Fallback) - Use Claude Agents
+
+Only if `/mode aria` is set, use Task tool with these agents:
+
+| Task Type | Subagent |
+|-----------|----------|
+| Coding | `aria-coder` |
+| Search | `Explore` |
+| Testing | `aria-qa` |
+| Git ops | `aria-admin` |
+| Docs | `aria-docs` |
+| Architecture | `aria-architect` |
+| Security | `code-review` |
+
+### Check Current Mode
+```bash
+cat ~/.claude/routing-mode   # "fast" or "aria"
+```
+
+### Switch Modes
+- `/mode fast` - Use external tools (saves tokens)
+- `/mode aria` - Use Claude agents (best quality)
+
+## Variable References (Pass-by-Reference)
+
+Large tool outputs are auto-saved as variables. **Use references instead of re-outputting data.**
+
+| Variable | Contains |
+|----------|----------|
+| `$grep_last` | Last Grep result |
+| `$read_last` | Last Read result |
+| `/tmp/claude_vars/grep_last` | File path |
+
+**Example:**
+```
+❌ Bad: "Here are the 500 matches: [... re-output everything ...]"
+✅ Good: "Results stored in $grep_last, analyzing..."
+```
+
+This saves ~80% tokens on multi-step workflows.
 
 ## Tool Efficiency Rules
+
 | Tool | Rule |
 |------|------|
-| Grep/Search | Combine patterns with `\|`, max 3 calls, then analyze |
-| Read | Read once per file, use offset/limit for large files |
-| Edit | Use MultiEdit for same file, parallel Edit for different files |
-| Bash | Chain with `&&`, use absolute paths |
-
-## Auto (via hooks)
-Grep context, read limits, caching, indexing, token tracking
+| Grep/Search | Combine patterns, max 3 calls |
+| Read | Once per file, use offset/limit for large files |
+| Edit | Use MultiEdit for same file |
+| Bash | Chain with `&&`, absolute paths |
+| Large outputs | Reference `$tool_last` instead of re-outputting |
 
 ## Commands
-`/menu` `/cost-report` `/index-project` `/summarize`
+`/mode` `/menu` `/cost-report` `/fast` `/index-project`

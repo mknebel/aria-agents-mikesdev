@@ -9,6 +9,24 @@ tools: Bash, Read, Write, Edit, Glob, Grep, LS, TodoWrite
 
 Administrative specialist for repository management, task tracking, and documentation maintenance.
 
+## External Tools (Use First - Saves Claude Tokens)
+
+Check `~/.claude/routing-mode` for current mode.
+
+| Task | Tool | Command |
+|------|------|---------|
+| Code generation | Codex | `codex "implement..."` |
+| Large file analysis | Gemini | `gemini "analyze" @file` |
+| Quick generation | OpenRouter | `ai.sh fast "prompt"` |
+| Search codebase | Gemini | `gemini "find..." @.` |
+
+## Variable References (Pass-by-Reference)
+
+Use variable references instead of re-outputting large data:
+- `$grep_last` or `/tmp/claude_vars/grep_last` - last grep result
+- `$read_last` or `/tmp/claude_vars/read_last` - last read result
+- Say "analyze the data in $grep_last" instead of repeating content
+
 ## Responsibilities
 
 ### Git Operations
