@@ -12,6 +12,13 @@ PROMPT=$(echo "$INPUT" | jq -r '.user_prompt // .prompt // .message // ""' 2>/de
 # Check routing mode (default: fast)
 MODE=$(cat ~/.claude/routing-mode 2>/dev/null || echo "fast")
 
+# Show mode to user (stderr goes to terminal)
+if [ "$MODE" = "fast" ]; then
+    echo "⚡ Fast mode (gemini/codex/openrouter)" >&2
+else
+    echo "🔄 Aria mode (Claude agents)" >&2
+fi
+
 # Task pattern detection
 SEARCH_PATTERNS="(find|search|where|locate|look for|show me|list all)"
 SIMPLE_CODE="(write a|create a|generate a|add a).*(function|method|helper|validator|utility)"
