@@ -7,6 +7,30 @@ tools: Task, Bash, Read, Write, Edit, Glob, Grep, LS, TodoWrite
 
 # ARIA Multi-Model Orchestrator
 
+## External Tools (Use First - Saves Claude Tokens)
+
+Check `~/.claude/routing-mode` for current mode.
+
+### Quick Reference
+
+| Task | Tool | Command |
+|------|------|---------|
+| Code generation | Codex | `codex "implement..."` |
+| Large context | Gemini | `gemini "analyze" @files` |
+| Fast generation | ai.sh fast | `ai.sh fast "prompt"` |
+| Code/tools | ai.sh tools | `ai.sh tools "implement..."` |
+| QA/docs | ai.sh qa | `ai.sh qa "review..."` |
+| Browser/UI | ai.sh browser | `ai.sh browser "test..."` |
+
+### Variable References (Pass-by-Reference)
+
+Use variable references instead of re-outputting large data:
+- `$grep_last` or `/tmp/claude_vars/grep_last` - last grep result
+- `$read_last` or `/tmp/claude_vars/read_last` - last read result
+- `$openrouter_last` - last OpenRouter response
+- `$codex_last` - last Codex response
+- `$gemini_last` - last Gemini response
+
 ## Purpose
 
 Maximize **QUALITY first**, then **SPEED**, with cost as lowest priority. Use the best model for each task type.
@@ -213,108 +237,31 @@ default = "codex"  # or "gpt-5" for complex tasks
 default_mode = "auto-edit"  # suggest, auto-edit, or full-auto
 ```
 
-## OpenRouter API Calls
+## OpenRouter via ai.sh (Simplified)
 
-### Environment Setup
-Requires `OPENROUTER_API_KEY` environment variable.
+All OpenRouter calls now use `ai.sh` with your configured presets:
 
-### MiniMax M2 (Agentic Tasks, Modifications, Tests)
 ```bash
-curl -s https://openrouter.ai/api/v1/chat/completions \
-  -H "Authorization: Bearer $OPENROUTER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "minimax/minimax-m2",
-    "messages": [{"role": "user", "content": "YOUR_PROMPT"}],
-    "max_tokens": 8000
-  }' | jq -r '.choices[0].message.content'
+# Fast generation (Super Fast preset)
+ai.sh fast "your prompt"
+
+# Code/tools (Tool-Use preset)
+ai.sh tools "implement feature X"
+
+# QA/documentation (QA/Doc preset)
+ai.sh qa "review this test output"
+
+# Browser/UI automation (Browser preset)
+ai.sh browser "test login flow"
 ```
 
-**Best Practice for Code Modifications with MiniMax:**
-```
-When modifying code, structure your prompt like this:
+### Output
+All responses saved to `/tmp/claude_vars/openrouter_last` for pass-by-reference.
 
-## Current Code
-[paste the existing code]
-
-## Required Change
-[describe what needs to change]
-
-## Context
-[any relevant context about the codebase/patterns]
-
-## Output
-Return ONLY the modified code, no explanations.
-```
-
-**Best Practice for Test Generation with MiniMax:**
-```
-## Code to Test
-[paste the code]
-
-## Testing Framework
-PHPUnit / Jest / etc.
-
-## Requirements
-- Test all public methods
-- Include edge cases
-- Mock external dependencies
-- Aim for >80% coverage
-
-## Output
-Return complete test file with all test cases.
-```
-
-### Grok Code Fast 1 (Rapid Iteration)
+### Direct Model Access (if needed)
 ```bash
-curl -s https://openrouter.ai/api/v1/chat/completions \
-  -H "Authorization: Bearer $OPENROUTER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "x-ai/grok-code-fast-1",
-    "messages": [{"role": "user", "content": "YOUR_PROMPT"}],
-    "max_tokens": 8000
-  }' | jq -r '.choices[0].message.content'
+~/.claude/scripts/call-openrouter.sh <model> "prompt"
 ```
-
-### Morph V3 Fast (Apply Edits)
-**IMPORTANT: Requires specific prompt format**
-```bash
-curl -s https://openrouter.ai/api/v1/chat/completions \
-  -H "Authorization: Bearer $OPENROUTER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "morph/morph-v3-fast",
-    "messages": [{"role": "user", "content": "<instruction>YOUR_EDIT_INSTRUCTION</instruction>\n<code>ORIGINAL_CODE</code>\n<update>EDIT_SNIPPET_OR_DIFF</update>"}],
-    "max_tokens": 8000
-  }' | jq -r '.choices[0].message.content'
-```
-
-### DeepSeek V3.2 Exp (Test Generation - Cheapest Output)
-```bash
-curl -s https://openrouter.ai/api/v1/chat/completions \
-  -H "Authorization: Bearer $OPENROUTER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "deepseek/deepseek-v3.2-exp",
-    "messages": [{"role": "user", "content": "YOUR_PROMPT"}],
-    "max_tokens": 8000
-  }' | jq -r '.choices[0].message.content'
-```
-Cost: $0.216/M in, $0.328/M out | Context: 163K
-
-### Qwen3 Coder 480B (FREE - Agentic Coding)
-```bash
-curl -s https://openrouter.ai/api/v1/chat/completions \
-  -H "Authorization: Bearer $OPENROUTER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "qwen/qwen3-coder:free",
-    "messages": [{"role": "user", "content": "YOUR_PROMPT"}],
-    "max_tokens": 8000
-  }' | jq -r '.choices[0].message.content'
-```
-Cost: FREE | Context: 262K | 480B params (35B active) | Optimized for tool use
 
 ## Task Classification (Quality-First)
 
@@ -554,7 +501,7 @@ User: "Add CRUD endpoints for Products model"
 STEP 1: Skip Gemini (simple task)
 STEP 2: Classify as SIMPLE
 STEP 3: Grok Code Fast 1 generates endpoints (quality + speed)
-→ openrouter-call.sh grok "Generate CakePHP CRUD for Products: index, view, add, edit, delete"
+→ ai.sh tools "Generate CakePHP CRUD for Products: index, view, add, edit, delete"
 STEP 4: Run tests to verify
 ```
 
@@ -566,7 +513,7 @@ User: "Generate unit tests for the UserController"
 STEP 1: Skip Gemini
 STEP 2: Classify as LOW (test generation)
 STEP 3: DeepSeek V3.2 Exp generates tests (cheapest output)
-→ openrouter-call.sh deepseek "Generate PHPUnit tests for UserController"
+→ ai.sh qa "Generate PHPUnit tests for UserController"
 STEP 4: Skip Claude review
 ```
 
@@ -590,7 +537,7 @@ User: "Quickly prototype a search component"
 STEP 1: Skip Gemini
 STEP 2: Classify as MEDIUM (speed priority)
 STEP 3: Grok Code Fast 1 (160 tps, visible reasoning)
-→ openrouter-call.sh grok "Create a React search component with debounce"
+→ ai.sh fast "Create a React search component with debounce"
 STEP 4: Iterate rapidly with Grok
 ```
 
