@@ -100,18 +100,20 @@ This saves ~80% tokens on multi-step workflows.
 
 Source: `~/.claude/scripts/shortcuts.sh` (auto-loaded in bash sessions)
 
-### Database Queries
+### Database Queries (MANDATORY - use dbquery, never raw mysql)
 ```bash
-# Unified dbquery tool (use this - credentials in ~/.claude/db-config.sh)
+# ALWAYS use dbquery - never run mysql directly (credentials managed centrally)
 ~/.claude/scripts/dbquery.sh verity "SELECT * FROM users"    # Query verity
 ~/.claude/scripts/dbquery.sh lyk "SELECT * FROM payments"    # Query lyk
 ~/.claude/scripts/dbquery.sh -l                              # List all aliases
-~/.claude/scripts/dbquery.sh verity -o csv "SHOW TABLES"     # CSV output
-~/.claude/scripts/dbquery.sh verity -t                       # Test connection
+~/.claude/scripts/dbquery.sh <alias> -o csv "SHOW TABLES"    # CSV output
+~/.claude/scripts/dbquery.sh <alias> -o json "SELECT..."     # JSON output
+~/.claude/scripts/dbquery.sh <alias> -t                      # Test connection
+```
 
-# Shortcuts (backward compatible)
-lykdb "SELECT * FROM table"           # LaunchYourKid DB
-veritydb "SELECT * FROM table"        # VerityCom DB
+**NEVER do this:**
+```bash
+mysql -h 127.0.0.1 -u root -p... dbname -e "query"  # ❌ WRONG - use dbquery instead
 ```
 
 ### Log Search (ripgrep - fast)
