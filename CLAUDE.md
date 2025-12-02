@@ -94,9 +94,63 @@ This saves ~80% tokens on multi-step workflows.
 | Bash | Chain with `&&`, absolute paths |
 | Large outputs | Reference `$tool_last` instead of re-outputting |
 
+## Project Shortcuts (USE THESE FIRST)
+
+**IMPORTANT**: Use these shortcuts instead of writing full commands. They're faster and reduce errors.
+
+Source: `~/.claude/scripts/shortcuts.sh` (auto-loaded in bash sessions)
+
+### Database Queries
+```bash
+# Unified dbquery tool (use this - credentials in ~/.claude/db-config.sh)
+~/.claude/scripts/dbquery.sh verity "SELECT * FROM users"    # Query verity
+~/.claude/scripts/dbquery.sh lyk "SELECT * FROM payments"    # Query lyk
+~/.claude/scripts/dbquery.sh -l                              # List all aliases
+~/.claude/scripts/dbquery.sh verity -o csv "SHOW TABLES"     # CSV output
+~/.claude/scripts/dbquery.sh verity -t                       # Test connection
+
+# Shortcuts (backward compatible)
+lykdb "SELECT * FROM table"           # LaunchYourKid DB
+veritydb "SELECT * FROM table"        # VerityCom DB
+```
+
+### Log Search (ripgrep - fast)
+```bash
+lyksearch "pattern"                   # Search all LYK logs
+veritysearch "pattern"                # Search all Verity logs
+lykerr                                # Tail LYK error log
+lyklog                                # Tail LYK debug log
+lykwatch                              # Watch LYK debug log live
+```
+
+### Testing
+```bash
+lyktest                               # Run LYK payment test
+testwatch "cmd" logfile               # Run test + show new log entries
+authnet-test LOGIN KEY [sandbox|production]  # Test AuthNet creds
+```
+
+### Browser Automation
+```bash
+ba "task"                             # Browser agent (headless)
+bav "task"                            # Browser agent (visible)
+```
+
+### PHP/CakePHP
+```bash
+cake migrations migrate              # Run migrations
+php74 script.php                     # Run with PHP 7.4
+```
+
+**Rule**: If a shortcut exists for the task, use it instead of the full command.
+
 ## Browser Automation
 
 Use `browser-agent.sh` for agentic browser testing (LLM-driven) or `browser.sh` for direct commands.
+
+**OpenRouter Presets** (auto-routes to best model):
+- Browser tasks: `@preset/browser-agent-tools-only` (MiniMax M2, DeepSeek V3.2, Qwen3)
+- General tools: `@preset/general-non-browser-tools`
 
 ### Agentic Browser Testing (LLM decides steps)
 ```bash
