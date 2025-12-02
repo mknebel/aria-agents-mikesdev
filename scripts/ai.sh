@@ -68,23 +68,19 @@ case "$TOOL" in
         ;;
 
     fast|f|quick)
-        # DeepSeek - fastest and cheapest
-        call_openrouter "deepseek/deepseek-chat" "$PROMPT" "⚡ DeepSeek (fast)..."
+        call_openrouter "@preset/super-fast" "$PROMPT" "⚡ Super Fast preset..."
         ;;
 
     qa|doc|review)
-        # QA/Doc preset works (3 models)
         call_openrouter "@preset/qa-doc-preset" "$PROMPT" "📋 QA/Doc preset..."
         ;;
 
     tools|code|implement)
-        # Direct model - preset has too many models
-        call_openrouter "qwen/qwen-2.5-coder-32b-instruct" "$PROMPT" "🔧 Qwen Coder..."
+        call_openrouter "@preset/general-non-browser-tools" "$PROMPT" "🔧 Tool-Use preset..."
         ;;
 
     browser|ui|playwright)
-        # Direct model - preset has too many models
-        call_openrouter "deepseek/deepseek-chat" "$PROMPT" "🌐 DeepSeek (browser)..."
+        call_openrouter "@preset/browser-agent-tools-only" "$PROMPT" "🌐 Browser preset..."
         ;;
 
     *)
