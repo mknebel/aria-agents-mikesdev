@@ -11,22 +11,37 @@ Example: `⚡ Fast | I'll search for that using gemini...`
 
 Check `~/.claude/routing-mode` for current mode. Default is **fast** (external tools).
 
-### Fast Mode (Default) - Use External Tools via Bash
+### When to Use External Tools (ALWAYS in Fast Mode)
+
+**BEFORE using Grep/Read directly, use these instead:**
+
+| User asks... | Use this | Command |
+|--------------|----------|---------|
+| "find X", "where is X", "search for X" | Tools agent | `ai.sh tools "find X in codebase"` |
+| "explain this code", "what does X do" | Smart read | `smart-read.sh file "question"` |
+| "search for pattern" | Smart search | `smart-search.sh "pattern" path` |
+| "test the UI", "check the page" | Browser agent | `browser-agent.sh "task"` |
+| "take a screenshot" | Browser | `browser.sh screenshot <url>` |
+| "implement X", "write code for" | Codex | `codex "implement X"` |
+| "review this code" | Codex | `codex "review..."` |
+| "write tests for" | Codex | `codex "write tests..."` |
+
+### Fast Mode Tools Reference
 
 | Task Type | Tool | Command |
 |-----------|------|---------|
 | Search/Analysis | Gemini (FREE) | `gemini "query" @files` |
+| Code exploration | DeepSeek | `ai.sh tools "task"` |
+| Smart search | DeepSeek/Gemini | `smart-search.sh "query" path` |
+| Smart read | DeepSeek/Gemini | `smart-read.sh file "question"` |
 | Simple code | OpenRouter | `ai.sh fast "prompt"` |
 | Complex code | Codex (FREE) | `codex "implement..."` |
 | Code review | Codex (FREE) | `codex "review..."` |
 | Write tests | Codex (FREE) | `codex "write tests..."` |
-| Smart search | DeepSeek/Gemini | `smart-search.sh "query" path` |
-| Smart read | DeepSeek/Gemini | `smart-read.sh file "question"` |
-| Tools agent | DeepSeek | `ai.sh tools "task"` (search+read+list) |
 | Browser/UI | Playwright | `browser-agent.sh "task"` |
 | Screenshot | Playwright | `browser.sh screenshot <url>` |
 
-**Run these via the Bash tool.** They use your existing subscriptions (Google, GPT) - not Claude tokens.
+**Run these via the Bash tool.** They use external LLMs - not Claude tokens.
 
 ### Aria Mode (Fallback) - Use Claude Agents
 
