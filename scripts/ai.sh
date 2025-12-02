@@ -1,37 +1,55 @@
 #!/bin/bash
-# Unified AI tool - uses your existing subscriptions
+# Unified AI tool - uses your existing subscriptions + OpenRouter
 # Usage: ai.sh <tool> "prompt" [files...]
 #
 # Tools:
-#   codex   - OpenAI Codex (your GPT account) - best for code review/generation
-#   gemini  - Google Gemini (your Google account) - best for search/analysis
-#   fast    - OpenRouter super-fast - best for quick generation
+#   codex   - OpenAI Codex (your GPT account) - code review/generation
+#   gemini  - Google Gemini (your Google account) - search/analysis
+#   fast    - DeepSeek (fastest, cheapest)
+#   qa      - QA/Doc preset (3 models, works)
+#   tools   - Qwen Coder (code generation)
+#   browser - DeepSeek (browser/UI prompts)
 #
-# Examples:
-#   ai.sh codex "Review this code for bugs"
-#   ai.sh gemini "Find authentication code" @src/**/*.php
-#   ai.sh fast "Write a PHP email validator"
-#
-# All outputs saved to /tmp/claude_vars/{tool}_last for pass-by-reference
+# All outputs saved to /tmp/claude_vars/{tool}_last
 
 TOOL="${1:-fast}"
 shift
 PROMPT="$*"
 
-# Ensure var directory exists
 VAR_DIR="/tmp/claude_vars"
 mkdir -p "$VAR_DIR"
 
-# Function to save output and display
 save_and_output() {
     local tool_name="$1"
     local output="$2"
-
-    # Save to variable store
     echo "$output" > "$VAR_DIR/${tool_name}_last"
-
-    # Display to user
     echo "$output"
+}
+
+call_openrouter() {
+    local model="$1"
+    local prompt="$2"
+    local label="$3"
+
+    KEY=$(cat ~/.config/openrouter/api_key 2>/dev/null)
+    [ -z "$KEY" ] && echo "Error: No OpenRouter key" >&2 && exit 1
+
+    echo "$label" >&2
+    START=$(date +%s.%N)
+
+    API_RESULT=$(curl -s https://openrouter.ai/api/v1/chat/completions \
+        -H "Authorization: Bearer $KEY" \
+        -H "Content-Type: application/json" \
+        -d "{
+            \"model\": \"$model\",
+            \"messages\": [{\"role\": \"user\", \"content\": $(echo "$prompt" | jq -Rs .)}],
+            \"max_tokens\": 8000
+        }")
+
+    END=$(date +%s.%N)
+    RESULT=$(echo "$API_RESULT" | jq -r '.choices[0].message.content // .error.message')
+    save_and_output "openrouter" "$RESULT"
+    echo "⏱️ $(echo "$END - $START" | bc)s | 📁 \$openrouter_last" >&2
 }
 
 case "$TOOL" in
@@ -39,49 +57,53 @@ case "$TOOL" in
         echo "🤖 Codex (GPT)..." >&2
         RESULT=$(codex "$PROMPT" 2>&1)
         save_and_output "codex" "$RESULT"
-        echo "📁 Saved to \$codex_last" >&2
+        echo "📁 \$codex_last" >&2
         ;;
 
     gemini|g)
         echo "🔍 Gemini..." >&2
         RESULT=$(gemini "$PROMPT" 2>&1)
         save_and_output "gemini" "$RESULT"
-        echo "📁 Saved to \$gemini_last" >&2
+        echo "📁 \$gemini_last" >&2
         ;;
 
-    fast|f)
-        echo "⚡ OpenRouter (fastest)..." >&2
-        KEY=$(cat ~/.config/openrouter/api_key 2>/dev/null)
-        if [ -z "$KEY" ]; then
-            echo "Error: No OpenRouter key" >&2
-            exit 1
-        fi
+    fast|f|quick)
+        # DeepSeek - fastest and cheapest
+        call_openrouter "deepseek/deepseek-chat" "$PROMPT" "⚡ DeepSeek (fast)..."
+        ;;
 
-        START=$(date +%s.%N)
-        API_RESULT=$(curl -s https://openrouter.ai/api/v1/chat/completions \
-            -H "Authorization: Bearer $KEY" \
-            -H "Content-Type: application/json" \
-            -d "{
-                \"model\": \"deepseek/deepseek-chat\",
-                \"messages\": [{\"role\": \"user\", \"content\": $(echo "$PROMPT" | jq -Rs .)}],
-                \"max_tokens\": 8000
-            }")
-        END=$(date +%s.%N)
+    qa|doc|review)
+        # QA/Doc preset works (3 models)
+        call_openrouter "@preset/qa-doc-preset" "$PROMPT" "📋 QA/Doc preset..."
+        ;;
 
-        RESULT=$(echo "$API_RESULT" | jq -r '.choices[0].message.content // .error.message')
-        save_and_output "openrouter" "$RESULT"
-        echo "" >&2
-        echo "⏱️ $(echo "$END - $START" | bc)s | 📁 Saved to \$openrouter_last" >&2
+    tools|code|implement)
+        # Direct model - preset has too many models
+        call_openrouter "qwen/qwen-2.5-coder-32b-instruct" "$PROMPT" "🔧 Qwen Coder..."
+        ;;
+
+    browser|ui|playwright)
+        # Direct model - preset has too many models
+        call_openrouter "deepseek/deepseek-chat" "$PROMPT" "🌐 DeepSeek (browser)..."
         ;;
 
     *)
-        echo "Usage: ai.sh <codex|gemini|fast> \"prompt\" [files...]"
-        echo ""
-        echo "Tools:"
-        echo "  codex  - Code review/generation (your GPT account)"
-        echo "  gemini - Search/analysis (your Google account)"
-        echo "  fast   - Quick generation (OpenRouter)"
-        echo ""
-        echo "Outputs saved to /tmp/claude_vars/{tool}_last"
+        cat << 'HELP'
+AI Tool - Unified Interface
+
+Usage: ai.sh <tool> "prompt"
+
+Free (your subscriptions):
+  codex   - GPT-4 (your OpenAI account)
+  gemini  - Gemini (your Google account)
+
+OpenRouter:
+  fast    - DeepSeek (cheapest, fastest)
+  qa      - QA/Doc preset (test logs, docs)
+  tools   - Qwen Coder (implementation)
+  browser - DeepSeek (UI automation prompts)
+
+Output: /tmp/claude_vars/{tool}_last
+HELP
         ;;
 esac
