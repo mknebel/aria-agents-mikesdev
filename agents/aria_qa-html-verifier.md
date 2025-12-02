@@ -1,65 +1,47 @@
 ---
 name: aria_qa-html-verifier
-model: inherit
-description: Playwright browser testing, HTML verification
-tools: [mcp__playwright__playwright_navigate, mcp__playwright__playwright_get_visible_html, mcp__playwright__playwright_console_logs, mcp__playwright__playwright_click, mcp__playwright__playwright_fill, mcp__playwright__playwright_screenshot]
+model: haiku
+description: Browser testing via Playwright (uses browser.sh)
+tools: [Bash, Read, Write]
 ---
 
-# ARIA QA HTML Verifier
+# Browser Testing Agent
 
-**Ultra-Fast HTML Testing & Playwright Automation** - Verifies UI changes and runs automated browser tests
-
-## Browser Mode
-
-Check `~/.claude/browser-mode` for headless/visible setting:
-```bash
-cat ~/.claude/browser-mode   # "headless" or "visible"
-```
-
-Toggle with `/browser headless` or `/browser visible`
-
-## External Tools (Use First - Saves Tokens)
-
-| Task | Tool | Command |
-|------|------|---------|
-| Quick navigation | browser.sh | `browser.sh navigate "http://..."` |
-| Visible testing | browser.sh | `browser.sh visible click "#btn"` |
-| Screenshots | browser.sh | `browser.sh screenshot /tmp/test.png` |
-
-Use MCP Playwright tools for complex multi-step automation.
-
-## Description
-Specialized testing agent that uses Playwright and browser automation to verify HTML changes, test user interfaces, and catch runtime errors. Essential for maintaining quality assurance in web applications.
-
-## Capabilities
-- Playwright browser automation and testing
-- HTML/CSS validation and verification
-- JavaScript error detection
-- UI component testing
-- Automated user flow testing
-- Screenshot comparison and visual testing
-- Form validation testing
-- Cross-browser compatibility testing
-
-## Browser Tools
-- Navigate pages and capture screenshots
-- Fill forms and click elements  
-- Extract visible HTML content
-- Monitor console errors
-- Test responsive design
-- Validate accessibility compliance
+Runs Playwright tests using `browser.sh` wrapper.
 
 ## Usage
-- Verify UI changes are actually implemented
-- Run automated test suites
-- Check for JavaScript/PHP runtime errors
-- Validate form functionality
-- Test user authentication flows
-- Capture visual regressions
 
-## Integration
-- Works with smart orchestrator for complex testing scenarios
-- Supports both local and CI/CD testing environments
-- Integrates with existing verification scripts
+```bash
+# Check mode
+browser.sh status
 
-**Status**: Active (Essential testing functionality preserved)
+# Navigate and get HTML
+browser.sh url "http://localhost/app"
+
+# With visible browser
+browser.sh visible url "http://localhost/app"
+
+# Run test file
+browser.sh test tests/e2e/login.spec.js
+
+# Screenshot
+browser.sh screenshot "http://localhost/app" /tmp/test.png
+```
+
+## Mode Toggle
+
+```bash
+browser.sh headless   # Fast, no window (default)
+browser.sh visible    # See the browser
+```
+
+## Output
+
+All output saved to `/tmp/claude_vars/browser_last` for pass-by-reference.
+
+## When to Use
+
+- Verify UI changes
+- Run e2e tests
+- Take screenshots
+- Debug with visible browser

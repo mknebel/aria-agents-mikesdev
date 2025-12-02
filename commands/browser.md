@@ -1,16 +1,15 @@
 ---
-description: Toggle browser mode (headless/visible) or check status
-argument-hint: [headless|visible|status]
+description: Browser mode (headless/visible) or run browser action
+argument-hint: [status|headless|visible|url|test|screenshot]
 ---
 
-# Browser Mode Toggle
+Run `browser.sh` with the provided argument:
 
-Based on the argument provided:
+- **status**: `browser.sh status`
+- **headless**: `browser.sh headless`
+- **visible**: `browser.sh visible`
+- **url <url>**: `browser.sh url "the-url"`
+- **test <file>**: `browser.sh test "the-file"`
+- **screenshot <url>**: `browser.sh screenshot "the-url"`
 
-- **"headless"**: Run `echo "headless" > ~/.claude/browser-mode` and confirm headless mode is active
-- **"visible"**: Run `echo "visible" > ~/.claude/browser-mode` and confirm visible mode is active
-- **"status"** or no argument: Run `cat ~/.claude/browser-mode` and show current mode
-
-Also show a reminder of how to use browser automation:
-- MCP tools: Use aria_qa-html-verifier agent for Playwright MCP tools
-- Script: `browser.sh navigate "http://..."` or `browser.sh visible click "#btn"`
+Show the output and confirm the action taken.
