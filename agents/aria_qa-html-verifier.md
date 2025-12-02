@@ -9,6 +9,25 @@ tools: [mcp__playwright__playwright_navigate, mcp__playwright__playwright_get_vi
 
 **Ultra-Fast HTML Testing & Playwright Automation** - Verifies UI changes and runs automated browser tests
 
+## Browser Mode
+
+Check `~/.claude/browser-mode` for headless/visible setting:
+```bash
+cat ~/.claude/browser-mode   # "headless" or "visible"
+```
+
+Toggle with `/browser headless` or `/browser visible`
+
+## External Tools (Use First - Saves Tokens)
+
+| Task | Tool | Command |
+|------|------|---------|
+| Quick navigation | browser.sh | `browser.sh navigate "http://..."` |
+| Visible testing | browser.sh | `browser.sh visible click "#btn"` |
+| Screenshots | browser.sh | `browser.sh screenshot /tmp/test.png` |
+
+Use MCP Playwright tools for complex multi-step automation.
+
 ## Description
 Specialized testing agent that uses Playwright and browser automation to verify HTML changes, test user interfaces, and catch runtime errors. Essential for maintaining quality assurance in web applications.
 
