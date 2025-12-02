@@ -25,6 +25,7 @@ SIMPLE_CODE="(write a|create a|generate a|add a).*(function|method|helper|valida
 COMPLEX_CODE="(implement|build|refactor|fix all|create system|add feature|redesign)"
 ANALYSIS="(analyze|explain|summarize|understand|how does)"
 TEST_PATTERNS="(test|write tests|add tests|create tests)"
+BROWSER_PATTERNS="(browser|screenshot|navigate to|open page|ui test|e2e test|playwright|verify ui|check page)"
 DOC_PATTERNS="(document|write docs|add documentation)"
 GIT_PATTERNS="(commit|push|pull|branch|merge|changelog)"
 REVIEW_PATTERNS="(review|check|audit|security)"
@@ -64,6 +65,12 @@ elif echo "$PROMPT" | grep -qiE "$TEST_PATTERNS"; then
     TOOL="Codex (your GPT account)"
     COMMAND="codex \"write tests for: ...\""
     FALLBACK="aria-qa agent"
+
+elif echo "$PROMPT" | grep -qiE "$BROWSER_PATTERNS"; then
+    ROUTE="EXTERNAL"
+    TOOL="browser.sh (Playwright)"
+    COMMAND="browser.sh url \"http://...\""
+    FALLBACK="aria_qa-html-verifier agent"
 
 elif echo "$PROMPT" | grep -qiE "$DOC_PATTERNS"; then
     ROUTE="AGENT"
@@ -125,6 +132,7 @@ Your tools (all FREE with your subscriptions):
 - Complex code → codex "implement..."
 - Code review → codex "review..."
 - Tests → codex "write tests..."
+- Browser/UI → browser.sh url "http://..."
 
 Mode: fast (external tools) - change with /mode aria
 </user-prompt-submit-hook>
