@@ -1,5 +1,12 @@
 # Global Rules - FOLLOW STRICTLY
 
+## Response Format
+Start every response with a brief mode indicator:
+- Fast mode: `⚡ Fast |` then your response
+- Aria mode: `🔄 Aria |` then your response
+
+Example: `⚡ Fast | I'll search for that using gemini...`
+
 ## CRITICAL: Use External Tools First (Saves Claude Tokens)
 
 Check `~/.claude/routing-mode` for current mode. Default is **fast** (external tools).
