@@ -35,8 +35,26 @@ done
 
 if [[ "$MATCHED" == "true" ]]; then
     # Check for complexity indicators - if complex, suggest Claude
-    # Also includes UI/design work where Claude excels
+    # UI/design work uses Claude, but browser testing uses OpenRouter
     COMPLEX_INDICATORS="complex|tricky|careful|critical|production|security|auth|payment|database|migration|refactor|ui|ux|design|css|html|style|layout|responsive|frontend|front-end|component|tailwind|bootstrap|template|modal|form|button|animation"
+
+    # Browser testing should use OpenRouter, not Claude (25x cheaper)
+    BROWSER_KEYWORDS="screenshot|browser|test.*page|check.*page|verify.*page|login.*test|e2e|end.to.end|playwright"
+    if [[ "$PROMPT_LOWER" =~ $BROWSER_KEYWORDS ]]; then
+        cat << 'EOF'
+<user-prompt-submit-hook>
+BROWSER TASK - Use OpenRouter (25x cheaper than Claude)
+
+Commands:
+- Screenshot: browser.sh screenshot <url>
+- Get HTML: browser.sh url <url>
+- Testing: browser-agent.sh "task description"
+
+Only use Claude for visual DESIGN review, not functional testing.
+</user-prompt-submit-hook>
+EOF
+        exit 0
+    fi
     if [[ "$PROMPT_LOWER" =~ $COMPLEX_INDICATORS ]]; then
         cat << 'EOF'
 <user-prompt-submit-hook>

@@ -22,3 +22,9 @@ do this
 start coding
 write a function
 write the
+
+screenshot
+browser
+test the page
+check the page
+verify the page
