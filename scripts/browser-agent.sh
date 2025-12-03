@@ -10,8 +10,12 @@ set -e
 
 MAX_ITERATIONS=20
 OPENROUTER_KEY=$(cat ~/.config/openrouter/api_key 2>/dev/null)
-# DeepSeek is fast and cheap
-MODEL="deepseek/deepseek-chat"
+
+# OpenRouter presets
+# Browser: @preset/browser-agent-tools-only
+# General: @preset/general-non-browser-tools
+MODEL="@preset/browser-agent-tools-only"
+
 VAR_DIR="/tmp/claude_vars"
 LOG_FILE="$VAR_DIR/browser-agent.log"
 SCREENSHOT_DIR="$HOME/.claude/browser-screenshots"
@@ -47,11 +51,10 @@ ACTIONS (one per response, raw JSON only):
 {"action":"fail","reason":"WHY"}
 
 RULES:
-1. Complete EVERY part of the task before using done
-2. If task says "take screenshot", you MUST take a screenshot
-3. If task says "click X", you MUST click X
-4. Only use done after ALL requested actions are complete
-5. Respond with JSON only, no markdown
+1. Do ONLY what is explicitly requested - no extra actions
+2. Use "done" immediately after completing the task
+3. Do NOT take screenshots unless explicitly asked
+4. JSON only, no markdown or explanations
 
 Example: "go to google.com, screenshot it, tell me title"
 → {"action":"navigate","url":"https://google.com"}
@@ -70,7 +73,11 @@ call_llm() {
         -H "Content-Type: application/json" \
         -d "{\"model\":\"$MODEL\",\"messages\":$messages,\"max_tokens\":500}")
 
-    local content=$(echo "$resp" | jq -r '.choices[0].message.content // "Error"')
+    # Handle models that use reasoning field (MiniMax M2, DeepSeek, etc.)
+    local content=$(echo "$resp" | jq -r '.choices[0].message.content // empty')
+    if [ -z "$content" ] || [ "$content" = "null" ]; then
+        content=$(echo "$resp" | jq -r '.choices[0].message.reasoning // .choices[0].message.reasoning_details[0].text // "Error"')
+    fi
     HISTORY="$HISTORY,{\"role\":\"user\",\"content\":$(echo "$msg" | jq -Rs .)},{\"role\":\"assistant\",\"content\":$(echo "$content" | jq -Rs .)}"
     echo "$content"
 }
@@ -200,9 +207,10 @@ echo "" >&2
 
 iter=0
 # Parse task into explicit steps
-msg="Task: $TASK
+msg="TASK: $TASK
 
-Break this into steps. Execute step 1 now."
+Execute step by step. Respond with one JSON action per message.
+When task is complete, respond: {\"action\":\"done\",\"summary\":\"result here\"}"
 
 while [ $iter -lt $MAX_ITERATIONS ]; do
     iter=$((iter + 1))
@@ -249,7 +257,8 @@ while [ $iter -lt $MAX_ITERATIONS ]; do
 
     msg="${PENDING}Result: $result
 
-Continue with next required action, or done if ALL task steps complete."
+REMINDER - Your task: $TASK
+Continue with next action, or {\"action\":\"done\",\"summary\":\"...\"} when complete."
     echo "" >&2
 done
 

@@ -1,15 +1,33 @@
 #!/bin/bash
 # Build Project Index - Pre-scans project files for fast lookups
-# Usage: build-project-index.sh /path/to/project [--full]
+# Usage: build-project-index.sh /path/to/project [--full] [--with-summaries]
 #
-# Supports incremental indexing - only rebuilds if files changed
-# Uses ripgrep (rg) which automatically respects .gitignore
-# Excludes: .git, node_modules, vendor, images, PDFs, binaries
+# Features:
+#   - Incremental indexing (only rebuilds if files changed)
+#   - Keyword extraction from function/class names
+#   - AI-generated file summaries (optional, requires Gemini)
+#   - Auto-respects .gitignore via ripgrep
+#
+# Options:
+#   --full           Force full rebuild
+#   --with-summaries Generate AI summaries for key files (uses Gemini)
+#   --incremental    Quick update for changed files only
 
 set -e
 
 PROJECT_ROOT="${1:-.}"
-FORCE_FULL="${2:-}"
+FORCE_FULL=""
+WITH_SUMMARIES=0
+INCREMENTAL=0
+
+# Parse arguments
+for arg in "$@"; do
+    case "$arg" in
+        --full) FORCE_FULL="--full" ;;
+        --with-summaries) WITH_SUMMARIES=1 ;;
+        --incremental) INCREMENTAL=1 ;;
+    esac
+done
 PROJECT_ROOT=$(cd "$PROJECT_ROOT" && pwd)  # Absolute path
 
 # Generate index name from path
@@ -180,7 +198,95 @@ eval "rg --files $RG_EXCLUDE '$PROJECT_ROOT'" 2>/dev/null | grep -E '\.(php|js|t
     done
 done >> "$OUTPUT_FILE"
 sed -i '$ s/,$//' "$OUTPUT_FILE"
-echo '  }' >> "$OUTPUT_FILE"
+echo '  },' >> "$OUTPUT_FILE"
+
+# --- KEYWORD INDEX ---
+# Extract keywords from function and class names for semantic search
+echo "Building keyword index..."
+echo '  "keyword_index": {' >> "$OUTPUT_FILE"
+
+declare -A KEYWORDS
+
+# Extract keywords from function names (camelCase and snake_case)
+extract_keywords() {
+    local name="$1"
+    local file="$2"
+    # Split camelCase: processPayment -> process payment
+    # Split snake_case: process_payment -> process payment
+    local words=$(echo "$name" | sed 's/\([a-z]\)\([A-Z]\)/\1 \2/g' | tr '_' ' ' | tr '[:upper:]' '[:lower:]')
+    for word in $words; do
+        # Skip common short words
+        if [[ ${#word} -ge 3 && ! "$word" =~ ^(get|set|the|and|for|has|add|new|all)$ ]]; then
+            echo "$word|$file"
+        fi
+    done
+}
+
+# Process all functions and classes
+KEYWORD_DATA=$(mktemp)
+eval "rg --files $RG_EXCLUDE '$PROJECT_ROOT'" 2>/dev/null | grep -E '\.(php|js|ts)$' | head -200 | while read -r f; do
+    REL_PATH="${f#$PROJECT_ROOT/}"
+    # Functions
+    grep -oE 'function [a-zA-Z_][a-zA-Z0-9_]*' "$f" 2>/dev/null | sed 's/function //' | while read -r func; do
+        extract_keywords "$func" "$REL_PATH"
+    done
+    # Classes
+    grep -oE '(class|interface|trait) [A-Z][a-zA-Z0-9_]*' "$f" 2>/dev/null | awk '{print $2}' | while read -r class; do
+        extract_keywords "$class" "$REL_PATH"
+    done
+done > "$KEYWORD_DATA"
+
+# Aggregate keywords
+declare -A KEYWORD_FILES
+while IFS='|' read -r keyword file; do
+    [[ -z "$keyword" ]] && continue
+    if [[ -z "${KEYWORD_FILES[$keyword]}" ]]; then
+        KEYWORD_FILES[$keyword]="$file"
+    elif [[ "${KEYWORD_FILES[$keyword]}" != *"$file"* ]]; then
+        KEYWORD_FILES[$keyword]="${KEYWORD_FILES[$keyword]},$file"
+    fi
+done < "$KEYWORD_DATA"
+
+# Write keyword index
+for keyword in "${!KEYWORD_FILES[@]}"; do
+    files="${KEYWORD_FILES[$keyword]}"
+    # Convert comma-separated to JSON array
+    json_array=$(echo "$files" | tr ',' '\n' | sort -u | head -10 | while read -r f; do echo "\"$f\""; done | tr '\n' ',' | sed 's/,$//')
+    echo "    \"$keyword\": [$json_array],"
+done | sort >> "$OUTPUT_FILE"
+
+rm -f "$KEYWORD_DATA"
+sed -i '$ s/,$//' "$OUTPUT_FILE"
+echo '  },' >> "$OUTPUT_FILE"
+
+# --- FILE SUMMARIES (optional, requires Gemini) ---
+if [[ $WITH_SUMMARIES -eq 1 ]] && command -v gemini &>/dev/null; then
+    echo "Generating file summaries with Gemini..."
+    echo '  "file_summaries": {' >> "$OUTPUT_FILE"
+
+    # Summarize key files (controllers, main files)
+    eval "rg --files $RG_EXCLUDE '$PROJECT_ROOT'" 2>/dev/null | grep -iE '(controller|service|model|handler)\.(php|js|ts)$' | head -20 | while read -r f; do
+        REL_PATH="${f#$PROJECT_ROOT/}"
+        echo "  Summarizing: $REL_PATH" >&2
+
+        # Get first 100 lines for summary
+        CONTENT=$(head -100 "$f" 2>/dev/null)
+
+        # Generate summary with Gemini
+        SUMMARY=$(echo "Summarize this code file in ONE sentence (max 100 chars). Focus on what it does, not implementation details:
+
+$CONTENT" | timeout 15 gemini 2>/dev/null | tr '\n' ' ' | cut -c1-150 | sed 's/"/\\"/g')
+
+        if [[ -n "$SUMMARY" ]]; then
+            echo "    \"$REL_PATH\": \"$SUMMARY\","
+        fi
+    done >> "$OUTPUT_FILE"
+
+    sed -i '$ s/,$//' "$OUTPUT_FILE"
+    echo '  }' >> "$OUTPUT_FILE"
+else
+    echo '  "file_summaries": {}' >> "$OUTPUT_FILE"
+fi
 
 # Close JSON
 echo '}' >> "$OUTPUT_FILE"
