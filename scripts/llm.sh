@@ -21,7 +21,9 @@
 set -e
 
 VAR_DIR="/tmp/claude_vars"
+CACHE_DIR="/tmp/claude_vars/cache"
 SCRIPTS_DIR="$HOME/.claude/scripts"
+mkdir -p "$CACHE_DIR"
 
 # Colors
 GREEN='\033[0;32m'
@@ -228,9 +230,73 @@ dispatch() {
     esac
 }
 
+# Generate cache key from provider + prompt + var contents
+get_cache_key() {
+    local provider="$1"
+    local prompt="$2"
+
+    # Build hash input: provider + prompt + var file hashes
+    local hash_input="$provider|$prompt"
+
+    local vars=$(echo "$prompt" | grep -oE '@var:[a-zA-Z0-9_]+' || true)
+    for ref in $vars; do
+        local var_name="${ref#@var:}"
+        local var_file="$VAR_DIR/${var_name}.txt"
+        if [[ -f "$var_file" ]]; then
+            hash_input+="|$(md5sum "$var_file" | cut -d' ' -f1)"
+        fi
+    done
+
+    echo "$hash_input" | md5sum | cut -d' ' -f1
+}
+
+# Check cache (returns 0 if hit, 1 if miss)
+check_cache() {
+    local cache_key="$1"
+    local cache_file="$CACHE_DIR/${cache_key}.txt"
+    local cache_meta="$CACHE_DIR/${cache_key}.meta"
+
+    [[ ! -f "$cache_file" ]] && return 1
+    [[ ! -f "$cache_meta" ]] && return 1
+
+    # Check freshness (1 hour max)
+    local cache_age=$(( $(date +%s) - $(stat -c %Y "$cache_file") ))
+    if [[ $cache_age -gt 3600 ]]; then
+        return 1
+    fi
+
+    echo -e "${GREEN}⚡ Cache hit (${cache_age}s old)${NC}" >&2
+    cat "$cache_file"
+    return 0
+}
+
+# Save to cache
+save_cache() {
+    local cache_key="$1"
+    local response="$2"
+    local provider="$3"
+    local prompt="$4"
+
+    local cache_file="$CACHE_DIR/${cache_key}.txt"
+    local cache_meta="$CACHE_DIR/${cache_key}.meta"
+
+    echo "$response" > "$cache_file"
+    echo "${provider}|${prompt:0:100}" > "$cache_meta"
+}
+
 # Main execution
 check_freshness "$PROMPT"
-RESPONSE=$(dispatch "$PROVIDER" "$PROMPT")
+
+# Check cache first
+CACHE_KEY=$(get_cache_key "$PROVIDER" "$PROMPT")
+if RESPONSE=$(check_cache "$CACHE_KEY"); then
+    # Cache hit - response already set
+    :
+else
+    # Cache miss - call LLM
+    RESPONSE=$(dispatch "$PROVIDER" "$PROMPT")
+    save_cache "$CACHE_KEY" "$RESPONSE" "$PROVIDER" "$PROMPT"
+fi
 
 # Save response
 echo "$RESPONSE" | "$SCRIPTS_DIR/var.sh" save "llm_response_last" - "$PROVIDER: ${PROMPT:0:50}" >/dev/null
