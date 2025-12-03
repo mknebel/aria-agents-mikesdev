@@ -6,18 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/mike/.claude/hooks/fast-mode-prompt.sh",
+            "command": "/home/mike/.claude/hooks/prompt-handler.sh",
             "timeout": 3
-          },
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/auto-route-query.sh",
-            "timeout": 2
-          },
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/auto-index-project.sh",
-            "timeout": 2
           }
         ]
       }
@@ -28,78 +18,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/mike/.claude/hooks/compress-prompt.sh",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "Grep",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/fast-mode-tool.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/enforce-grep-context.sh",
-            "timeout": 60
-          },
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/use-project-index.sh",
-            "timeout": 30
-          },
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/search-cache-check.sh",
-            "timeout": 30
-          },
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/semantic-cache.sh",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "Search",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/enforce-grep-context.sh",
-            "timeout": 60
-          }
-        ]
-      },
-      {
-        "matcher": "Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/fast-mode-tool.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/limit-large-reads.sh",
-            "timeout": 60
-          },
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/file-cache.sh",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "Task",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/fast-mode-tool.sh",
-            "timeout": 5
+            "command": "/home/mike/.claude/hooks/pre-tool-handler.sh",
+            "timeout": 3
           }
         ]
       }
@@ -110,38 +30,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/mike/.claude/hooks/track-usage.sh",
-            "timeout": 30
-          },
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/var-store.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/short-response.sh",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "Grep",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/search-cache-store.sh",
-            "timeout": 30
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/log-file-changes.sh",
-            "timeout": 10
+            "command": "/home/mike/.claude/hooks/post-tool-handler.sh",
+            "timeout": 3
           }
         ]
       }

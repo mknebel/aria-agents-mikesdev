@@ -26,6 +26,7 @@ SCRIPTS_DIR="$HOME/.claude/scripts"
 mkdir -p "$CACHE_DIR"
 
 # Colors
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
@@ -238,7 +239,108 @@ auto_select_llm() {
     esac
 }
 
-# Dispatch to appropriate LLM
+# Health check cache (avoid repeated checks within 5 min)
+HEALTH_CACHE="/tmp/claude_vars/health_cache"
+mkdir -p "$(dirname "$HEALTH_CACHE")" 2>/dev/null
+
+# Check if provider is healthy (responds within timeout)
+check_health() {
+    local provider="$1"
+    local cache_file="${HEALTH_CACHE}_${provider}"
+
+    # Check cache (valid for 5 minutes)
+    if [[ -f "$cache_file" ]]; then
+        local age=$(( $(date +%s) - $(stat -c %Y "$cache_file") ))
+        if [[ $age -lt 300 ]]; then
+            cat "$cache_file"
+            return
+        fi
+    fi
+
+    # Quick health check (2 second timeout)
+    local healthy="yes"
+    case "$provider" in
+        codex)
+            timeout 2 codex "hi" >/dev/null 2>&1 || healthy="no"
+            ;;
+        gemini)
+            timeout 2 gemini "hi" >/dev/null 2>&1 || healthy="no"
+            ;;
+        fast|tools|qa|browser)
+            timeout 2 "$SCRIPTS_DIR/ai.sh" fast "hi" >/dev/null 2>&1 || healthy="no"
+            ;;
+    esac
+
+    echo "$healthy" > "$cache_file"
+    echo "$healthy"
+}
+
+# Get fallback chain for a provider
+get_fallback() {
+    local provider="$1"
+    case "$provider" in
+        codex) echo "fast gemini" ;;
+        gemini) echo "codex fast" ;;
+        fast|tools|qa) echo "codex gemini" ;;
+        browser) echo "fast codex" ;;
+        *) echo "fast" ;;
+    esac
+}
+
+# Validate response quality
+validate_response() {
+    local response="$1"
+    local min_length="${2:-10}"
+
+    # Check not empty
+    [[ -z "$response" ]] && return 1
+
+    # Check minimum length
+    [[ ${#response} -lt $min_length ]] && return 1
+
+    # Check for common error patterns
+    [[ "$response" =~ ^(Error|error:|ERROR|Failed|failed:) ]] && return 1
+    [[ "$response" =~ "rate limit" ]] && return 1
+    [[ "$response" =~ "API key" ]] && return 1
+
+    return 0
+}
+
+# Call a single provider
+call_provider() {
+    local provider="$1"
+    local prompt="$2"
+    local resolved
+
+    case "$provider" in
+        codex)
+            resolved=$(resolve_for_llm "$prompt" "codex")
+            codex "$resolved" 2>/dev/null
+            ;;
+        gemini)
+            resolved=$(resolve_for_llm "$prompt" "gemini")
+            gemini "$resolved" 2>/dev/null
+            ;;
+        fast)
+            resolved=$(resolve_for_llm "$prompt" "openrouter")
+            "$SCRIPTS_DIR/ai.sh" fast "$resolved" 2>/dev/null
+            ;;
+        tools)
+            resolved=$(resolve_for_llm "$prompt" "openrouter")
+            "$SCRIPTS_DIR/ai.sh" tools "$resolved" 2>/dev/null
+            ;;
+        qa)
+            resolved=$(resolve_for_llm "$prompt" "openrouter")
+            "$SCRIPTS_DIR/ai.sh" qa "$resolved" 2>/dev/null
+            ;;
+        browser)
+            resolved=$(resolve_for_llm "$prompt" "openrouter")
+            "$SCRIPTS_DIR/ai.sh" browser "$resolved" 2>/dev/null
+            ;;
+    esac
+}
+
+# Dispatch with health check and fallback
 dispatch() {
     local provider="$1"
     local prompt="$2"
@@ -248,49 +350,53 @@ dispatch() {
         provider=$(auto_select_llm "$prompt")
     fi
 
+    # Normalize provider name
     case "$provider" in
-        codex|c)
-            local resolved=$(resolve_for_llm "$prompt" "codex")
-            echo -e "${GREEN}🤖 Codex${NC}" >&2
-            codex "$resolved"
-            ;;
-
-        gemini|g)
-            local resolved=$(resolve_for_llm "$prompt" "gemini")
-            echo -e "${GREEN}🔍 Gemini${NC}" >&2
-            gemini "$resolved"
-            ;;
-
-        fast|f|quick)
-            local resolved=$(resolve_for_llm "$prompt" "openrouter")
-            echo -e "${GREEN}⚡ Fast (DeepSeek)${NC}" >&2
-            "$SCRIPTS_DIR/ai.sh" fast "$resolved"
-            ;;
-
-        tools|t|code)
-            local resolved=$(resolve_for_llm "$prompt" "openrouter")
-            echo -e "${GREEN}🔧 Tools preset${NC}" >&2
-            "$SCRIPTS_DIR/ai.sh" tools "$resolved"
-            ;;
-
-        qa|doc|review)
-            local resolved=$(resolve_for_llm "$prompt" "openrouter")
-            echo -e "${GREEN}📋 QA preset${NC}" >&2
-            "$SCRIPTS_DIR/ai.sh" qa "$resolved"
-            ;;
-
-        browser|ui)
-            local resolved=$(resolve_for_llm "$prompt" "openrouter")
-            echo -e "${GREEN}🌐 Browser preset${NC}" >&2
-            "$SCRIPTS_DIR/ai.sh" browser "$resolved"
-            ;;
-
-        *)
-            echo "Unknown provider: $provider" >&2
-            echo "Use: codex, gemini, fast, tools, qa, browser" >&2
-            exit 1
-            ;;
+        c) provider="codex" ;;
+        g) provider="gemini" ;;
+        f|quick) provider="fast" ;;
+        t|code) provider="tools" ;;
+        doc|review) provider="qa" ;;
+        ui) provider="browser" ;;
     esac
+
+    # Build provider chain: primary + fallbacks
+    local providers="$provider $(get_fallback "$provider")"
+    local response=""
+    local used_provider=""
+
+    for p in $providers; do
+        # Check health first (skip if unhealthy)
+        if [[ $(check_health "$p") == "no" ]]; then
+            echo -e "${YELLOW}⚠️  $p unhealthy, skipping${NC}" >&2
+            continue
+        fi
+
+        echo -e "${GREEN}🤖 Trying $p...${NC}" >&2
+        response=$(call_provider "$p" "$prompt")
+
+        # Validate response
+        if validate_response "$response"; then
+            used_provider="$p"
+            break
+        else
+            echo -e "${YELLOW}⚠️  $p returned invalid response, trying fallback${NC}" >&2
+            # Mark as unhealthy for next 5 min
+            echo "no" > "${HEALTH_CACHE}_${p}"
+        fi
+    done
+
+    if [[ -z "$response" ]]; then
+        echo -e "${RED}❌ All providers failed${NC}" >&2
+        echo "Error: All LLM providers failed to respond"
+        return 1
+    fi
+
+    if [[ "$used_provider" != "$provider" ]]; then
+        echo -e "${CYAN}ℹ️  Used fallback: $used_provider${NC}" >&2
+    fi
+
+    echo "$response"
 }
 
 # Generate cache key from provider + prompt + var contents

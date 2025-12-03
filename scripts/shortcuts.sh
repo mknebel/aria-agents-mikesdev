@@ -38,6 +38,27 @@ function cdlyk { cd /mnt/d/MikesDev/www/LaunchYourKid/LYK-Cake4-Admin; }
 function cdverity { cd /mnt/d/MikesDev/www/Whitlock/Verity/VerityCom; }
 function cdwww { cd /mnt/d/MikesDev/www; }
 
+# Check if project has git changes since last index
+_has_git_changes() {
+    local project="$1"
+    local index_file="$2"
+
+    [[ ! -d "$project/.git" ]] && return 1
+    [[ ! -f "$index_file" ]] && return 0
+
+    local index_time=$(stat -c %Y "$index_file" 2>/dev/null || echo 0)
+    local last_commit=$(git -C "$project" log -1 --format=%ct 2>/dev/null || echo 0)
+
+    # Refresh if commits newer than index
+    [[ $last_commit -gt $index_time ]] && return 0
+
+    # Check for uncommitted changes
+    local changes=$(git -C "$project" status --porcelain 2>/dev/null | wc -l)
+    [[ $changes -gt 0 ]] && return 0
+
+    return 1
+}
+
 # Session warmup (runs in background, non-blocking)
 _claude_warmup() {
     local warmup_lock="/tmp/claude_warmup.lock"
@@ -58,9 +79,19 @@ _claude_warmup() {
         if [[ -d "$project" ]]; then
             local index_name=$(echo "$project" | md5sum | cut -d' ' -f1)
             local index_file="$HOME/.claude/indexes/$index_name/inverted.json"
+            local need_refresh=false
 
-            # Index if missing or stale (>1 hour)
-            if [[ ! -f "$index_file" ]] || [[ $(( $(date +%s) - $(stat -c %Y "$index_file" 2>/dev/null || echo 0) )) -gt 3600 ]]; then
+            # Check: missing, stale (>1 hour), or git changes
+            if [[ ! -f "$index_file" ]]; then
+                need_refresh=true
+            elif [[ $(( $(date +%s) - $(stat -c %Y "$index_file" 2>/dev/null || echo 0) )) -gt 3600 ]]; then
+                need_refresh=true
+            elif _has_git_changes "$project" "$index_file"; then
+                echo "$(date): Git changes detected in $project" >> "$warmup_log"
+                need_refresh=true
+            fi
+
+            if $need_refresh; then
                 echo "$(date): Warming $project" >> "$warmup_log"
                 ~/.claude/scripts/index-v2/build-index.sh "$project" >> "$warmup_log" 2>&1 &
             fi
@@ -72,6 +103,6 @@ _claude_warmup() {
 (_claude_warmup &) 2>/dev/null
 
 # Exports
-export -f dbquery lyksearch veritysearch cake php74 php81 ba bav cctx ctx var llm recent-changes cdlyk cdverity cdwww _claude_warmup
+export -f dbquery lyksearch veritysearch cake php74 php81 ba bav cctx ctx var llm recent-changes cdlyk cdverity cdwww _has_git_changes _claude_warmup
 export LYK_LOGS VERITY_LOGS
 alias smart-review='~/.claude/scripts/smart-review.sh'
