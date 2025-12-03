@@ -7,17 +7,17 @@
           {
             "type": "command",
             "command": "/home/mike/.claude/hooks/fast-mode-prompt.sh",
-            "timeout": 5
+            "timeout": 3
           },
           {
             "type": "command",
             "command": "/home/mike/.claude/hooks/auto-route-query.sh",
-            "timeout": 30
+            "timeout": 2
           },
           {
             "type": "command",
             "command": "/home/mike/.claude/hooks/auto-index-project.sh",
-            "timeout": 10
+            "timeout": 2
           }
         ]
       }

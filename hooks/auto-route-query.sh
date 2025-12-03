@@ -1,26 +1,25 @@
 #!/bin/bash
 # UserPromptSubmit hook - Auto-routes search queries to Gemini agent
+# Optimized: Uses bash pattern matching instead of grep
 
 INPUT=$(cat)
-USER_MESSAGE=$(echo "$INPUT" | jq -r '.user_prompt // empty' | tr '[:upper:]' '[:lower:]')
+USER_MESSAGE=$(echo "$INPUT" | jq -r '.user_prompt // empty' 2>/dev/null)
+[[ -z "$USER_MESSAGE" ]] && exit 0
 
-# Debug logging
-echo "$(date): $USER_MESSAGE" >> /tmp/auto-route-debug.log
+# Convert to lowercase using bash
+MSG_LOWER="${USER_MESSAGE,,}"
 
-# Search-related keywords → Route to Gemini agent
-SEARCH_PATTERNS="find |search |where is|where are|list all|show me all|locate |look for|which files|what files"
-EXCLUDE_PATTERNS="implement|write code|create a|fix |add feature|generate|build a"
+# Search patterns (bash regex)
+SEARCH="find |search |where is|where are|list all|show me|locate |look for|which file|what file"
+EXCLUDE="implement|write|create|fix |add |generate|build|refactor"
 
-if echo "$USER_MESSAGE" | grep -qiE "$SEARCH_PATTERNS"; then
-    if ! echo "$USER_MESSAGE" | grep -qiE "$EXCLUDE_PATTERNS"; then
-        echo "ROUTED to agent" >> /tmp/auto-route-debug.log
-
-        # For UserPromptSubmit, output additional context as plain text
-        ORIGINAL=$(echo "$INPUT" | jq -r '.user_prompt // empty')
-        echo "IMPORTANT: Route this search task to the parallel-work-manager-fast agent (uses Gemini - faster and cheaper). The search query is: $ORIGINAL"
-        exit 0
-    fi
+# Use bash regex matching (faster than grep)
+if [[ "$MSG_LOWER" =~ $SEARCH ]] && [[ ! "$MSG_LOWER" =~ $EXCLUDE ]]; then
+    cat << EOF
+<user-prompt-submit-hook>
+🔍 Search detected - use: ctx "$USER_MESSAGE" or gemini "$USER_MESSAGE" @src
+</user-prompt-submit-hook>
+EOF
 fi
 
-# Pass through - output nothing to allow original prompt
 exit 0
