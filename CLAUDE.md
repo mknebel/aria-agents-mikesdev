@@ -1,106 +1,66 @@
-# Global Rules
+# RULES
 
-## Response Format
-Start responses with: `⚡ Fast |` or `🔄 Aria |`
-
-## Routing Decision Tree
-
+## MODE
 ```
-Is mode fast? (cat ~/.claude/routing-mode)
-├─ YES → Use external tools (see table below)
-└─ NO (aria) → Use Claude agents (aria-coder, Explore, aria-qa, etc.)
-
-Is task UI/CSS/design?
-└─ YES → Use Claude directly (skip external tools)
+CHECK: cat ~/.claude/routing-mode → fast|aria
+fast → external tools (below)
+aria → Claude agents (aria-coder, Explore, aria-qa, aria-admin, aria-docs, aria-architect, code-review)
+UI/CSS/design → Claude direct (skip external)
 ```
 
-## Tools Reference (Fast Mode)
+## RESPONSE: `⚡ Fast |` or `🔄 Aria |`
 
-| Task | Command | Cost |
-|------|---------|------|
-| **Search code** | `ctx "query"` or `smart-search.sh "pattern"` | FREE |
-| **Symbol lookup** | `/lookup ClassName` | FREE |
-| **Read + analyze** | `smart-read.sh file "question"` | ~$0.01 |
-| **Implement code** | `codex "implement..."` or `cctx "task"` | FREE |
-| **Review code** | `codex "review..."` | FREE |
-| **Write tests** | `codex "write tests..."` | FREE |
-| **Quick generation** | `ai.sh fast "prompt"` | ~$0.001 |
-| **Tool-use chains** | `ai.sh tools "task"` | ~$0.01 |
-| **Screenshot** | `browser.sh screenshot <url>` | FREE |
-| **Browser testing** | `ba "task"` (headless) / `bav "task"` (visible) | ~$0.02 |
-| **Database** | `dbquery lyk "SELECT..."` | FREE |
+## TOOLS
+```yaml
+search:     ctx "query" | smart-search.sh "pattern"     # FREE, saves $ctx_last
+lookup:     /lookup ClassName                           # FREE
+read:       smart-read.sh file "question"               # $0.01
+implement:  codex "task" | cctx "task"                  # FREE
+review:     codex "review..."                           # FREE
+tests:      codex "write tests..."                      # FREE
+quick:      ai.sh fast "prompt"                         # $0.001
+tools:      ai.sh tools "task"                          # $0.01
+screenshot: browser.sh screenshot <url>                 # FREE
+browser:    ba "task" | bav "task"                      # $0.02
+database:   dbquery lyk|verity "SQL"                    # FREE
+php:        cake <cmd> | php74 | php81                  # -
+```
 
-**Claude tools OK**: Grep, Glob, Edit, Write (included in subscription)
-
-## Variable Protocol (MANDATORY)
-
-All outputs auto-save. Pass references, not data:
-
+## VARS (MANDATORY)
+```yaml
+protocol: ctx → llm @var:name (never inline data)
+store:    /tmp/claude_vars/ (cleared on restart)
+```
 ```bash
-ctx "auth login"                              # → $ctx_last
-llm codex "implement @var:ctx_last"           # → $llm_response_last
-llm qa "review @var:llm_response_last"        # Chains automatically
+ctx "query"                          # → $ctx_last
+llm codex "do @var:ctx_last"         # → $llm_response_last
+llm qa "review @var:llm_response_last"
+var list | var fresh name 5
+```
+```yaml
+$ctx_last:          ctx output
+$llm_response_last: llm output
+$grep_last:         Grep output
+$read_last:         Read output
+```
+Codex/Gemini: read files (pass path). OpenRouter: inline (max 20KB).
+
+## EFFICIENCY
+```yaml
+Grep:   combine patterns, max 3 calls
+Read:   once per file, use limit for large
+Edit:   MultiEdit for same file
+Bash:   chain &&, absolute paths
+Output: @var:name, never re-output
 ```
 
-| Variable | Source |
-|----------|--------|
-| `$ctx_last` | `ctx` |
-| `$llm_response_last` | `llm` |
-| `$grep_last` | Claude Grep |
-| `$read_last` | Claude Read |
-
-**LLM capabilities**: Codex/Gemini read files (pass path). OpenRouter inlines content (max 20KB).
-
+## BROWSER
 ```bash
-var list          # Show all variables
-var fresh name 5  # Check if <5 min old
+browser.sh screenshot|visible|headless <url>
+ba "task"   # headless
+bav "task"  # visible
 ```
+Output: ~/.claude/browser-screenshots/
 
-## Efficiency Rules
-
-| Tool | Rule |
-|------|------|
-| Grep | Combine patterns, max 3 calls |
-| Read | Once per file, use limit for large files |
-| Edit | Use MultiEdit for same file |
-| Bash | Chain with `&&`, absolute paths |
-| Output | Reference `@var:name`, never re-output data |
-
-## Shortcuts
-
-| Shortcut | Purpose |
-|----------|---------|
-| `ctx` | Context search (auto-saves) |
-| `llm` | Smart LLM dispatcher |
-| `var` | Variable manager |
-| `cctx` | Codex with index context |
-| `dbquery` | Database queries |
-| `cake` | CakePHP CLI (php74) |
-| `ba`/`bav` | Browser agent headless/visible |
-| `lyksearch` | Search LYK logs |
-
-## Browser
-
-```bash
-browser.sh screenshot <url>     # Quick screenshot
-browser.sh visible/headless     # Set mode
-ba "test the form"              # Agentic (headless)
-bav "test the form"             # Agentic (visible)
-```
-
-Output: `~/.claude/browser-screenshots/`, `~/.claude/browser-videos/`
-
-## Commands
-`/mode` `/fast` `/menu` `/cost-report` `/index-project` `/lookup`
-
-## Aria Mode Agents (when mode=aria)
-
-| Task | Agent |
-|------|-------|
-| Coding | `aria-coder` |
-| Search | `Explore` |
-| Testing | `aria-qa` |
-| Git | `aria-admin` |
-| Docs | `aria-docs` |
-| Architecture | `aria-architect` |
-| Security | `code-review` |
+## COMMANDS
+/mode /fast /menu /cost-report /index-project /lookup
