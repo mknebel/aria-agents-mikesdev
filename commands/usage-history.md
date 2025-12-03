@@ -11,7 +11,7 @@ LOG_DIR="$HOME/.claude/logs/token-usage"
 echo "=== Usage History ==="
 echo ""
 
-if [[ ! -d "$LOG_DIR" ]] || [[ -z "$(ls -A "$LOG_DIR" 2>/dev/null)" ]]; then
+if [ ! -d "$LOG_DIR" ] || [ -z "$(ls -A "$LOG_DIR" 2>/dev/null)" ]; then
     echo "No usage history found."
     exit 0
 fi
