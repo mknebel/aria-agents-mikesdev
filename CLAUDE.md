@@ -11,6 +11,26 @@ Example: `⚡ Fast | I'll search for that using gemini...`
 
 Check `~/.claude/routing-mode` for current mode. Default is **fast** (external tools).
 
+### ⛔ MANDATORY PRE-TOOL CHECK (Fast Mode)
+
+**BEFORE using Read, Grep, or Task tools, STOP and ask yourself:**
+
+1. Am I in fast mode? (`cat ~/.claude/routing-mode`)
+2. Is there an external tool that does this cheaper?
+
+| ❌ DON'T | ✅ DO INSTEAD |
+|----------|---------------|
+| `Read` on file >100 lines | `smart-read.sh file "what I need"` |
+| `Grep` for exploration | `smart-search.sh "pattern"` or `gemini "find X" @path` |
+| `Task` with Explore agent | `gemini "question about codebase" @src` |
+| Multiple `Read` calls | `ctx src/path` then `gemini "analyze" @-` |
+| Writing complex code | `codex "implement X"` or `cctx "implement X"` |
+
+**VIOLATIONS (token waste):**
+- Reading a 2000-line file when you only need one function
+- Using Grep 5+ times to explore instead of one gemini query
+- Using Claude agents in fast mode
+
 ### When to Use External Tools (ALWAYS in Fast Mode)
 
 **BEFORE using Grep/Read directly, use these instead:**
@@ -94,57 +114,55 @@ This saves ~80% tokens on multi-step workflows.
 | Bash | Chain with `&&`, absolute paths |
 | Large outputs | Reference `$tool_last` instead of re-outputting |
 
-## Project Shortcuts (USE THESE FIRST)
+## Project Shortcuts
 
-**IMPORTANT**: Use these shortcuts instead of writing full commands. They're faster and reduce errors.
+Essential shortcuts for common tasks. Loaded via BASH_ENV for all sessions (including Claude).
 
-Source: `~/.claude/scripts/shortcuts.sh` (auto-loaded in bash sessions)
+Source: `~/.claude/scripts/shortcuts.sh`
 
-### Database Queries (MANDATORY - use dbquery, never raw mysql)
+| Shortcut | Full path | Purpose |
+|----------|-----------|---------|
+| `dbquery` | `~/.claude/scripts/dbquery.sh` | Database queries (credentials managed) |
+| `lyksearch` | - | Search LYK logs (rg) |
+| `veritysearch` | - | Search Verity logs (rg) |
+| `cake` | `/mnt/c/Apache24/php74/php.exe bin/cake.php` | CakePHP commands |
+| `php74` | `/mnt/c/Apache24/php74/php.exe` | PHP 7.4 |
+| `php81` | `/mnt/c/Apache24/php81/php.exe` | PHP 8.1 |
+| `ba` | `~/.claude/scripts/browser-agent.sh` | Browser agent (headless) |
+| `bav` | `~/.claude/scripts/browser-agent.sh visible` | Browser agent (visible) |
+| `cctx` | `~/.claude/scripts/codex-with-context.sh` | Codex with index context |
+| `ctx` | `~/.claude/scripts/ctx.sh` | Context builder (no AI) |
+| `recent-changes` | `~/.claude/scripts/recent-changes.sh` | List recent file changes |
+| `cdlyk` | - | cd to LYK-Cake4-Admin |
+| `cdverity` | - | cd to VerityCom |
+| `cdwww` | - | cd to /mnt/d/MikesDev/www |
+
+### Database (MANDATORY - never raw mysql)
 ```bash
-# ALWAYS use dbquery - never run mysql directly (credentials managed centrally)
-~/.claude/scripts/dbquery.sh verity "SELECT * FROM users"    # Query verity
-~/.claude/scripts/dbquery.sh lyk "SELECT * FROM payments"    # Query lyk
-~/.claude/scripts/dbquery.sh -l                              # List all aliases
-~/.claude/scripts/dbquery.sh <alias> -o csv "SHOW TABLES"    # CSV output
-~/.claude/scripts/dbquery.sh <alias> -o json "SELECT..."     # JSON output
-~/.claude/scripts/dbquery.sh <alias> -t                      # Test connection
+dbquery lyk "SELECT * FROM users"     # Query LYK database
+dbquery verity "SELECT..."            # Query Verity database
+dbquery -l                            # List all aliases
+dbquery <alias> -o json "SELECT..."   # JSON output
 ```
 
-**NEVER do this:**
+### Log Search (local rg - fast, free)
 ```bash
-mysql -h 127.0.0.1 -u root -p... dbname -e "query"  # ❌ WRONG - use dbquery instead
+lyksearch "error"                     # Search LYK logs
+veritysearch "pattern"                # Search Verity logs
 ```
 
-### Log Search (ripgrep - fast)
+### PHP (port 80 = php74, port 81 = php81)
 ```bash
-lyksearch "pattern"                   # Search all LYK logs
-veritysearch "pattern"                # Search all Verity logs
-lykerr                                # Tail LYK error log
-lyklog                                # Tail LYK debug log
-lykwatch                              # Watch LYK debug log live
+cake migrations migrate               # CakePHP command
+php74 script.php                      # PHP 7.4
+php81 script.php                      # PHP 8.1
 ```
 
-### Testing
+### Browser (include port in URL if needed)
 ```bash
-lyktest                               # Run LYK payment test
-testwatch "cmd" logfile               # Run test + show new log entries
-authnet-test LOGIN KEY [sandbox|production]  # Test AuthNet creds
+ba "test http://localhost/app"        # Headless
+bav "test http://localhost:81/app"    # Visible, port 81
 ```
-
-### Browser Automation
-```bash
-ba "task"                             # Browser agent (headless)
-bav "task"                            # Browser agent (visible)
-```
-
-### PHP/CakePHP
-```bash
-cake migrations migrate              # Run migrations
-php74 script.php                     # Run with PHP 7.4
-```
-
-**Rule**: If a shortcut exists for the task, use it instead of the full command.
 
 ## Browser Automation
 

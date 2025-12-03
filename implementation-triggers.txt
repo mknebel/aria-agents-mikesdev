@@ -1,0 +1,24 @@
+# Trigger phrases that indicate implementation mode
+# When detected, Claude will be reminded to use external tools first
+# One phrase per line, case-insensitive matching
+implement
+code this
+fix this
+fix the
+write code
+add feature
+create a
+build a
+modify the
+change the
+update the
+refactor
+make it
+edit the
+add a
+fix bug
+solve this
+do this
+start coding
+write a function
+write the

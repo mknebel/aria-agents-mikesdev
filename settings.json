@@ -6,6 +6,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "/home/mike/.claude/hooks/implementation-mode-reminder.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
             "command": "/home/mike/.claude/hooks/enforce-agent-delegation.sh",
             "timeout": 5
           },
@@ -36,6 +41,11 @@
       {
         "matcher": "Grep",
         "hooks": [
+          {
+            "type": "command",
+            "command": "/home/mike/.claude/hooks/enforce-fast-mode-routing.sh",
+            "timeout": 5
+          },
           {
             "type": "command",
             "command": "/home/mike/.claude/hooks/enforce-grep-context.sh",
@@ -73,12 +83,27 @@
         "hooks": [
           {
             "type": "command",
+            "command": "/home/mike/.claude/hooks/enforce-fast-mode-routing.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
             "command": "/home/mike/.claude/hooks/limit-large-reads.sh",
             "timeout": 60
           },
           {
             "type": "command",
             "command": "/home/mike/.claude/hooks/file-cache.sh",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/mike/.claude/hooks/enforce-fast-mode-routing.sh",
             "timeout": 5
           }
         ]
