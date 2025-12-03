@@ -35,7 +35,8 @@ done
 
 if [[ "$MATCHED" == "true" ]]; then
     # Check for complexity indicators - if complex, suggest Claude
-    COMPLEX_INDICATORS="complex|tricky|careful|critical|production|security|auth|payment|database|migration|refactor"
+    # Also includes UI/design work where Claude excels
+    COMPLEX_INDICATORS="complex|tricky|careful|critical|production|security|auth|payment|database|migration|refactor|ui|ux|design|css|html|style|layout|responsive|frontend|front-end|component|tailwind|bootstrap|template|modal|form|button|animation"
     if [[ "$PROMPT_LOWER" =~ $COMPLEX_INDICATORS ]]; then
         cat << 'EOF'
 <user-prompt-submit-hook>
