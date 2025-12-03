@@ -40,10 +40,36 @@ OPENROUTER_KEY=$(cat ~/.config/openrouter/api_key 2>/dev/null)
 
 mkdir -p "$VAR_DIR"
 
-echo "🔍 Smart Search (two-pass hybrid)" >&2
+echo "🔍 Smart Search (indexed + two-pass hybrid)" >&2
 echo "📋 Query: $QUERY" >&2
 echo "📁 Path: $SEARCH_PATH" >&2
 echo "" >&2
+
+# ━━━ Check/Build Index First ━━━
+SEARCH_PATH_ABS=$(cd "$SEARCH_PATH" 2>/dev/null && pwd || echo "$SEARCH_PATH")
+INDEX_NAME=$(echo "$SEARCH_PATH_ABS" | md5sum | cut -d' ' -f1)
+INDEX_DIR="$HOME/.claude/indexes/$INDEX_NAME"
+INDEX_SEARCH="$HOME/.claude/scripts/index-v2/search.sh"
+INDEX_BUILD="$HOME/.claude/scripts/index-v2/build-index.sh"
+
+# Auto-build index if missing
+if [[ ! -d "$INDEX_DIR" ]] && [[ -x "$INDEX_BUILD" ]]; then
+    echo "📦 No index found. Building index..." >&2
+    "$INDEX_BUILD" "$SEARCH_PATH_ABS" >&2 || true
+    echo "" >&2
+fi
+
+# Try index search first if available
+if [[ -d "$INDEX_DIR" ]] && [[ -x "$INDEX_SEARCH" ]]; then
+    echo "⚡ Using index..." >&2
+    INDEX_RESULT=$("$INDEX_SEARCH" "$QUERY" "$SEARCH_PATH_ABS" 2>/dev/null || echo "")
+    if [[ -n "$INDEX_RESULT" && "$INDEX_RESULT" != *"No matches"* ]]; then
+        echo "$INDEX_RESULT" > "$VAR_DIR/smart_search_last"
+        echo "$INDEX_RESULT"
+        exit 0
+    fi
+    echo "📭 Index miss, falling back to ripgrep..." >&2
+fi
 
 # ━━━ Check Cache First ━━━
 if [[ -x "$CACHE_SCRIPT" ]]; then
