@@ -48,20 +48,30 @@ Check `~/.claude/routing-mode` for current mode. Default is **fast** (external t
 
 ### Fast Mode Tools Reference
 
-| Task Type | Tool | Command |
-|-----------|------|---------|
-| Search/Analysis | Gemini (FREE) | `gemini "query" @files` |
-| Code exploration | DeepSeek | `ai.sh tools "task"` |
-| Smart search | DeepSeek/Gemini | `smart-search.sh "query" path` |
-| Smart read | DeepSeek/Gemini | `smart-read.sh file "question"` |
-| Simple code | OpenRouter | `ai.sh fast "prompt"` |
-| Complex code | Codex (FREE) | `codex "implement..."` |
-| Code review | Codex (FREE) | `codex "review..."` |
-| Write tests | Codex (FREE) | `codex "write tests..."` |
-| Browser/UI | Playwright | `browser-agent.sh "task"` |
-| Screenshot | Playwright | `browser.sh screenshot <url>` |
+| Task Type | Tool | Command | Cost |
+|-----------|------|---------|------|
+| **Pattern search** | Claude Grep | Use directly | Included |
+| **File listing** | Claude Glob | Use directly | Included |
+| Semantic analysis | Gemini | `gemini "query" @files` | FREE |
+| Quick code gen | OpenRouter | `ai.sh fast "prompt"` | ~$0.001 |
+| Tool-use tasks | OpenRouter | `ai.sh tools "task"` | ~$0.01 |
+| Smart read | DeepSeek/Gemini | `smart-read.sh file "question"` | ~$0.01 |
+| Complex code | Codex | `codex "implement..."` | FREE |
+| Code review | Codex | `codex "review..."` | FREE |
+| Write tests | Codex | `codex "write tests..."` | FREE |
+| Browser/UI | Playwright | `browser-agent.sh "task"` | ~$0.02 |
+| Screenshot | Playwright | `browser.sh screenshot <url>` | FREE |
 
-**Run these via the Bash tool.** They use external LLMs - not Claude tokens.
+**Claude search tools ARE efficient** - use Grep/Glob directly for pattern matching.
+
+### OpenRouter Models (via ai.sh)
+| Command | Model | Best For |
+|---------|-------|----------|
+| `ai.sh fast` | Grok-3-mini | Quick snippets, simple tasks |
+| `ai.sh tools` | DeepSeek V3 | File ops, tool-use chains |
+| `ai.sh agent` | Browser preset | UI testing, screenshots |
+
+**Run these via Bash tool.** External LLMs = no Claude tokens.
 
 ### Aria Mode (Fallback) - Use Claude Agents
 
@@ -210,3 +220,4 @@ browser.sh status                       # Show current mode
 
 ## Commands
 `/mode` `/menu` `/cost-report` `/fast` `/index-project`
+- Use Claude for UI designs and related HTML, CSS and front-end frameworks

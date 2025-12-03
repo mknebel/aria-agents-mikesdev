@@ -36,16 +36,10 @@ EOF
         ;;
 
     Grep)
-        # Warn on exploratory searches
-        cat << EOF
-<pre-tool-use-hook>
-💡 FAST MODE TIP: For exploratory searches, consider:
-  smart-search.sh "$PATTERN" or gemini "find $PATTERN" @src
-
-Grep is fine for targeted lookups. Use external tools for exploration.
-</pre-tool-use-hook>
-EOF
+        # Claude's Grep is efficient - only warn on very broad exploratory searches
+        # Allow targeted searches to proceed without warning
         ;;
+
 
     Task)
         SUBAGENT=$(echo "$TOOL_INPUT" | jq -r '.subagent_type // ""' 2>/dev/null)

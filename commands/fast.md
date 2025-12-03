@@ -57,13 +57,23 @@ If review finds issues, Claude implements the fixes (Codex can only identify, no
 
 ## Quick Reference
 
-| Task Type | Route | Command |
-|-----------|-------|---------|
-| Search/explore | Gemini | `gemini "query" @files` |
-| Simple code | Codex | `codex "implement..."` |
-| Code review | Codex → Claude | `smart-review.sh file` |
-| Complex code | Claude | Just ask Claude |
-| UI/Design | Claude | Just ask Claude |
+| Task Type | Route | Command | Cost |
+|-----------|-------|---------|------|
+| Search/explore | Gemini | `gemini "query" @files` | FREE |
+| Quick code gen | OpenRouter | `ai.sh fast "task"` | ~$0.001 |
+| Tool-use tasks | OpenRouter | `ai.sh tools "task"` | ~$0.01 |
+| Simple code | Codex | `codex "implement..."` | FREE |
+| Code review | Codex → Claude | `smart-review.sh file` | FREE → Paid |
+| Complex code | Claude | Just ask Claude | Paid |
+| UI/Design | Claude | Just ask Claude | Paid |
+
+## OpenRouter Models (via ai.sh)
+
+| Command | Model | Best For |
+|---------|-------|----------|
+| `ai.sh fast` | Grok-3-mini | Quick code snippets |
+| `ai.sh tools` | DeepSeek V3 | Tool-use, file operations |
+| `ai.sh agent` | Browser preset | UI testing, screenshots |
 
 ## Token Comparison
 | Approach | Claude Tokens | When to Use |
