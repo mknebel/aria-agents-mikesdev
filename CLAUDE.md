@@ -33,7 +33,10 @@ store:    /tmp/claude_vars/ (cleared on restart)
 ```
 ```bash
 ctx "query"                          # → $ctx_last
-llm codex "do @var:ctx_last"         # → $llm_response_last
+llm auto "do @var:ctx_last"          # auto-routes by PURPOSE:
+                                     #   implement/write → codex
+                                     #   review/analyze  → qa
+                                     #   explain/what is → fast
 llm qa "review @var:llm_response_last"
 var list | var fresh name 5
 ```

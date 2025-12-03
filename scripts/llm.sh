@@ -50,10 +50,11 @@ Providers:
   tools    Tool-use preset (inlines content)
   qa       QA/Doc preset (inlines content)
 
-Auto-selection logic:
-  <1KB   → fast (cheapest, quickest)
-  1-20KB → gemini (free, good quality)
-  >20KB  → codex (can read large files)
+Auto-selection logic (by PURPOSE):
+  implement/write/create → codex (best code generation)
+  review/check/analyze   → qa (optimized for analysis)
+  explain/summarize      → fast (speed priority)
+  browser/click/navigate → browser preset
 
 Variable References:
   @var:name      Reference to /tmp/claude_vars/name.txt
@@ -158,27 +159,83 @@ get_context_size() {
     echo "$total"
 }
 
-# Auto-select best LLM based on context size
-# Note: Gemini can't read /tmp files, so we use codex for @var: refs
+# Detect intent from prompt keywords
+detect_intent() {
+    local prompt="${1,,}"  # lowercase
+
+    # Code generation patterns
+    if [[ "$prompt" =~ (implement|write|create|build|add|generate|refactor|fix|update|modify) ]]; then
+        echo "code"
+        return
+    fi
+
+    # Review/QA patterns
+    if [[ "$prompt" =~ (review|check|analyze|audit|validate|test|verify|compare|diff) ]]; then
+        echo "review"
+        return
+    fi
+
+    # Quick question patterns
+    if [[ "$prompt" =~ (explain|what is|how does|why|summarize|describe|list|show) ]]; then
+        echo "quick"
+        return
+    fi
+
+    # Browser/UI patterns
+    if [[ "$prompt" =~ (browser|click|navigate|screenshot|fill|form|button|page) ]]; then
+        echo "browser"
+        return
+    fi
+
+    # Default to code (most common use case)
+    echo "code"
+}
+
+# Auto-select best LLM based on PURPOSE (not size)
+# Priority: intent > @var: presence > size fallback
 auto_select_llm() {
     local prompt="$1"
-    local size=$(get_context_size "$prompt")
+    local intent=$(detect_intent "$prompt")
     local has_var_refs=$(echo "$prompt" | grep -c '@var:' || echo 0)
+    local size=$(get_context_size "$prompt")
 
-    if [[ $size -lt 1024 ]]; then
-        echo -e "${CYAN}📊 Context: ${size}B → fast (quick)${NC}" >&2
-        echo "fast"
-    elif [[ $has_var_refs -gt 0 ]]; then
-        # Use codex for @var: refs (can read files anywhere)
-        echo -e "${CYAN}📊 Context: ${size}B + @var: → codex (file access)${NC}" >&2
-        echo "codex"
-    elif [[ $size -lt 20480 ]]; then
-        echo -e "${CYAN}📊 Context: ${size}B → fast (inline)${NC}" >&2
-        echo "fast"
-    else
-        echo -e "${CYAN}📊 Context: ${size}B → codex (large files)${NC}" >&2
-        echo "codex"
-    fi
+    case "$intent" in
+        code)
+            # Code tasks → codex (best generation quality)
+            echo -e "${CYAN}🎯 Intent: code → codex${NC}" >&2
+            echo "codex"
+            ;;
+        review)
+            # Review tasks → qa preset (optimized for analysis)
+            echo -e "${CYAN}🎯 Intent: review → qa${NC}" >&2
+            echo "qa"
+            ;;
+        quick)
+            # Quick questions → fast (speed priority)
+            if [[ $has_var_refs -gt 0 ]]; then
+                # But codex if @var: refs (needs file access)
+                echo -e "${CYAN}🎯 Intent: quick + @var: → codex${NC}" >&2
+                echo "codex"
+            else
+                echo -e "${CYAN}🎯 Intent: quick → fast${NC}" >&2
+                echo "fast"
+            fi
+            ;;
+        browser)
+            echo -e "${CYAN}🎯 Intent: browser → browser${NC}" >&2
+            echo "browser"
+            ;;
+        *)
+            # Fallback: codex for @var: refs, fast otherwise
+            if [[ $has_var_refs -gt 0 ]]; then
+                echo -e "${CYAN}🎯 Default + @var: → codex${NC}" >&2
+                echo "codex"
+            else
+                echo -e "${CYAN}🎯 Default → fast${NC}" >&2
+                echo "fast"
+            fi
+            ;;
+    esac
 }
 
 # Dispatch to appropriate LLM
