@@ -38,7 +38,40 @@ function cdlyk { cd /mnt/d/MikesDev/www/LaunchYourKid/LYK-Cake4-Admin; }
 function cdverity { cd /mnt/d/MikesDev/www/Whitlock/Verity/VerityCom; }
 function cdwww { cd /mnt/d/MikesDev/www; }
 
+# Session warmup (runs in background, non-blocking)
+_claude_warmup() {
+    local warmup_lock="/tmp/claude_warmup.lock"
+    local warmup_log="/tmp/claude_warmup.log"
+
+    # Skip if already running or ran recently (5 min)
+    [[ -f "$warmup_lock" ]] && [[ $(( $(date +%s) - $(stat -c %Y "$warmup_lock" 2>/dev/null || echo 0) )) -lt 300 ]] && return
+
+    touch "$warmup_lock"
+
+    # Common project paths to pre-index
+    local projects=(
+        "/mnt/d/MikesDev/www/LaunchYourKid/LaunchYourKid-Cake4/register"
+        "/mnt/d/MikesDev/www/LaunchYourKid/LYK-Cake4-Admin"
+    )
+
+    for project in "${projects[@]}"; do
+        if [[ -d "$project" ]]; then
+            local index_name=$(echo "$project" | md5sum | cut -d' ' -f1)
+            local index_file="$HOME/.claude/indexes/$index_name/inverted.json"
+
+            # Index if missing or stale (>1 hour)
+            if [[ ! -f "$index_file" ]] || [[ $(( $(date +%s) - $(stat -c %Y "$index_file" 2>/dev/null || echo 0) )) -gt 3600 ]]; then
+                echo "$(date): Warming $project" >> "$warmup_log"
+                ~/.claude/scripts/index-v2/build-index.sh "$project" >> "$warmup_log" 2>&1 &
+            fi
+        fi
+    done
+}
+
+# Run warmup in background (silent, non-blocking)
+(_claude_warmup &) 2>/dev/null
+
 # Exports
-export -f dbquery lyksearch veritysearch cake php74 php81 ba bav cctx ctx var llm recent-changes cdlyk cdverity cdwww
+export -f dbquery lyksearch veritysearch cake php74 php81 ba bav cctx ctx var llm recent-changes cdlyk cdverity cdwww _claude_warmup
 export LYK_LOGS VERITY_LOGS
 alias smart-review='~/.claude/scripts/smart-review.sh'
