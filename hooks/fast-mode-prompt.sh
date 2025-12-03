@@ -53,22 +53,16 @@ EOF
 else
     cat << EOF
 <user-prompt-submit-hook>
-⚡ FAST MODE: Use external tools (saves Claude tokens)
+⚡ FAST MODE - MANDATORY WORKFLOW:
 
-**Recommended**: $TOOL
-**Command**: $CMD
-**Fallback**: $FALLBACK (uses Claude tokens)
+1. ctx "query" → saves \$ctx_last
+2. llm codex|fast|qa "@var:ctx_last" → uses reference
+3. NEVER inline large data - always @var:name
 
-Your tools (all FREE):
-- ctx "query" → llm codex "@var:ctx_last"
-- gemini "query" @files
-- codex "implement..." / "review..." / "write tests..."
-- ai.sh fast "prompt"
-- browser.sh screenshot <url>
+Recommended: $CMD
+Fallback: $FALLBACK
 
-**Variable Protocol**: ctx → llm @var:ctx_last (99% token savings)
-
-Mode: fast - change with /mode aria
+Mode: fast | /mode aria to switch
 </user-prompt-submit-hook>
 EOF
 fi
