@@ -1,42 +1,4 @@
 {
-  "hooks": {
-    "UserPromptSubmit": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/prompt-handler.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/pre-tool-handler.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/post-tool-handler.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ]
-  },
   "enabledPlugins": {
     "frontend-design@claude-code-plugins": true
   },
