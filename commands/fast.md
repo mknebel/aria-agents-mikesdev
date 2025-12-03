@@ -7,55 +7,69 @@ argument-hint: <task description>
 
 Execute this task using the optimized 4-tier workflow for maximum speed and minimal Claude token usage.
 
-## Workflow Steps
+## Smart Routing Check
 
-### Step 1: Context (Gemini - FREE, 2M context)
-Run this command to gather codebase context:
+First, determine if this task should use Claude directly:
+
+**Use Claude for (quality-critical):**
+- Complex logic: payment, security, auth, database, migration, refactor
+- UI/Design: css, html, design, layout, responsive, frontend, component, modal, form
+- Keywords: complex, tricky, critical, production
+
+**Use External Tools for (cost-efficient):**
+- Simple searches and exploration
+- Boilerplate code generation
+- Standard patterns
+- Documentation lookup
+
+## Workflow by Task Type
+
+### For Complex/UI Tasks → Claude Direct
+If the task matches complexity indicators above, proceed with Claude directly:
+- Read necessary files
+- Implement the solution
+- Claude excels at UI design, complex logic, and implementing fixes
+
+### For Simple Tasks → 4-Tier Workflow
+
+#### Step 1: Context (Gemini - FREE)
 ```bash
 gemini "Find relevant code patterns and files for: $ARGUMENTS" @src/**/*.php
 ```
 
-### Step 2: Planning (Claude - You do this)
-Based on the Gemini context, create a detailed specification with:
-- Technical requirements
-- Step-by-step implementation
-- Code structure
-- Validation rules
-- Test cases
-
-Keep the spec concise but complete - OpenRouter needs clear instructions.
-
-### Step 3: Generation (OpenRouter - Ultra-fast)
-For simple tasks, run:
+#### Step 2: Generation (OpenRouter/Codex)
+For simple implementations:
 ```bash
-cat > /tmp/task-prompt.txt << 'PROMPT'
-[Paste your specification here]
-PROMPT
-
-curl -s https://openrouter.ai/api/v1/chat/completions \
-  -H "Authorization: Bearer $(cat ~/.config/openrouter/api_key)" \
-  -H "Content-Type: application/json" \
-  -d "{\"model\": \"x-ai/grok-3-mini-beta\", \"messages\": [{\"role\": \"user\", \"content\": $(jq -Rs . < /tmp/task-prompt.txt)}], \"max_tokens\": 4000}" | jq -r '.choices[0].message.content'
+codex "implement: $ARGUMENTS"
+```
+Or for quick generation:
+```bash
+ai.sh fast "$ARGUMENTS"
 ```
 
-For complex tasks, use `deepseek/deepseek-chat` or `qwen/qwen3-235b-a22b`.
-
-### Step 4: Review (Codex - FREE)
+#### Step 3: Review (Codex - FREE)
 ```bash
-codex "Review this code for quality and security issues: [paste code]"
+codex "Review this code for quality issues: [paste code]"
 ```
 
-## Quick One-Liner
-For simple code generation:
-```bash
-gemini "context for: $ARGUMENTS" @src/**/*.php && echo "Now generating..." && curl -s https://openrouter.ai/api/v1/chat/completions -H "Authorization: Bearer $(cat ~/.config/openrouter/api_key)" -H "Content-Type: application/json" -d '{"model": "x-ai/grok-3-mini-beta", "messages": [{"role": "user", "content": "$ARGUMENTS"}], "max_tokens": 4000}' | jq -r '.choices[0].message.content'
-```
+#### Step 4: Implement Fixes (Claude)
+If review finds issues, Claude implements the fixes (Codex can only identify, not fix).
+
+## Quick Reference
+
+| Task Type | Route | Command |
+|-----------|-------|---------|
+| Search/explore | Gemini | `gemini "query" @files` |
+| Simple code | Codex | `codex "implement..."` |
+| Code review | Codex → Claude | `smart-review.sh file` |
+| Complex code | Claude | Just ask Claude |
+| UI/Design | Claude | Just ask Claude |
 
 ## Token Comparison
-| Approach | Claude Tokens | Speed |
-|----------|---------------|-------|
-| Direct Claude | 100% | Baseline |
-| Aria Agents | 100%+ (overhead) | Slower |
-| **This Workflow** | **~15-20%** | **2-5x faster** |
+| Approach | Claude Tokens | When to Use |
+|----------|---------------|-------------|
+| External tools | ~15-20% | Simple tasks |
+| Claude direct | 100% | Complex/UI tasks |
+| Hybrid | ~40-60% | Mixed workloads |
 
 The task to execute: $ARGUMENTS
