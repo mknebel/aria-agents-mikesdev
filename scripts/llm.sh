@@ -159,16 +159,22 @@ get_context_size() {
 }
 
 # Auto-select best LLM based on context size
+# Note: Gemini can't read /tmp files, so we use codex for @var: refs
 auto_select_llm() {
     local prompt="$1"
     local size=$(get_context_size "$prompt")
+    local has_var_refs=$(echo "$prompt" | grep -c '@var:' || echo 0)
 
     if [[ $size -lt 1024 ]]; then
         echo -e "${CYAN}📊 Context: ${size}B → fast (quick)${NC}" >&2
         echo "fast"
+    elif [[ $has_var_refs -gt 0 ]]; then
+        # Use codex for @var: refs (can read files anywhere)
+        echo -e "${CYAN}📊 Context: ${size}B + @var: → codex (file access)${NC}" >&2
+        echo "codex"
     elif [[ $size -lt 20480 ]]; then
-        echo -e "${CYAN}📊 Context: ${size}B → gemini (free, good)${NC}" >&2
-        echo "gemini"
+        echo -e "${CYAN}📊 Context: ${size}B → fast (inline)${NC}" >&2
+        echo "fast"
     else
         echo -e "${CYAN}📊 Context: ${size}B → codex (large files)${NC}" >&2
         echo "codex"
