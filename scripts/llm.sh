@@ -27,9 +27,10 @@ SCRIPTS_DIR="$HOME/.claude/scripts"
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m'
 
-PROVIDER="${1:-fast}"
+PROVIDER="${1:-auto}"
 shift
 PROMPT="$*"
 
@@ -40,11 +41,17 @@ llm.sh - Smart LLM dispatcher
 Usage: llm <provider> "prompt with @var:references"
 
 Providers:
+  auto     Auto-select based on context size (recommended)
   codex    OpenAI Codex (reads files via @file:)
   gemini   Google Gemini (reads files via @path)
   fast     DeepSeek via OpenRouter (inlines content)
   tools    Tool-use preset (inlines content)
   qa       QA/Doc preset (inlines content)
+
+Auto-selection logic:
+  <1KB   → fast (cheapest, quickest)
+  1-20KB → gemini (free, good quality)
+  >20KB  → codex (can read large files)
 
 Variable References:
   @var:name      Reference to /tmp/claude_vars/name.txt
@@ -132,10 +139,49 @@ resolve_for_llm() {
     echo "$resolved"
 }
 
+# Calculate total context size from @var: references
+get_context_size() {
+    local prompt="$1"
+    local total=0
+
+    local vars=$(echo "$prompt" | grep -oE '@var:[a-zA-Z0-9_]+' || true)
+    for ref in $vars; do
+        local var_name="${ref#@var:}"
+        local var_file="$VAR_DIR/${var_name}.txt"
+        if [[ -f "$var_file" ]]; then
+            total=$((total + $(wc -c < "$var_file")))
+        fi
+    done
+
+    echo "$total"
+}
+
+# Auto-select best LLM based on context size
+auto_select_llm() {
+    local prompt="$1"
+    local size=$(get_context_size "$prompt")
+
+    if [[ $size -lt 1024 ]]; then
+        echo -e "${CYAN}📊 Context: ${size}B → fast (quick)${NC}" >&2
+        echo "fast"
+    elif [[ $size -lt 20480 ]]; then
+        echo -e "${CYAN}📊 Context: ${size}B → gemini (free, good)${NC}" >&2
+        echo "gemini"
+    else
+        echo -e "${CYAN}📊 Context: ${size}B → codex (large files)${NC}" >&2
+        echo "codex"
+    fi
+}
+
 # Dispatch to appropriate LLM
 dispatch() {
     local provider="$1"
     local prompt="$2"
+
+    # Handle auto mode
+    if [[ "$provider" == "auto" || "$provider" == "a" ]]; then
+        provider=$(auto_select_llm "$prompt")
+    fi
 
     case "$provider" in
         codex|c)
