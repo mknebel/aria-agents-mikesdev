@@ -32,3 +32,6 @@ project-indexes/
 plugins/
 browser-screenshots/
 browser-videos/
+
+# Generated indexes (project-specific, regenerated on demand)
+indexes/

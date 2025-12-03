@@ -22,6 +22,8 @@ Based on the argument provided:
 Set mode to use external tools (Gemini, Codex, OpenRouter):
 ```bash
 echo "fast" > ~/.claude/routing-mode && echo "✅ Mode set to FAST (external tools)"
+# Auto-index in background for fast local searches
+"$HOME/.claude/scripts/index-v2/auto-index.sh" "$(pwd)" &
 echo ""
 echo "Routes to:"
 echo "  - Search → gemini CLI (FREE)"
