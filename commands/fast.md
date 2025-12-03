@@ -5,18 +5,38 @@ argument-hint: <task description>
 
 # Fast Hybrid Workflow
 
-Execute this task using the optimized 4-tier workflow for maximum speed and minimal Claude token usage.
+Execute this task using the optimized 4-tier workflow with **variable-passing** for maximum speed and minimal token usage.
+
+## Variable-Passing Protocol (MANDATORY)
+
+**Always use references, never inline data:**
+
+```bash
+# Search → auto-saves to $ctx_last
+ctx "query"
+
+# Pass reference to LLM (NOT inline data)
+llm codex "implement X based on @var:ctx_last"
+llm fast "summarize @var:ctx_last"
+
+# Chain responses
+llm qa "review @var:llm_response_last"
+```
+
+| Variable | Contains | Auto-saved by |
+|----------|----------|---------------|
+| `$ctx_last` | Last context search | `ctx "query"` |
+| `$llm_response_last` | Last LLM response | `llm` command |
+| `$grep_last` | Last grep result | Claude Grep |
 
 ## Smart Routing Check
 
-First, determine if this task should use Claude directly:
-
-**Use Claude for (quality-critical):**
+**Use Claude directly for:**
 - Complex logic: payment, security, auth, database, migration, refactor
-- UI/Design: css, html, design, layout, responsive, frontend, component, modal, form
+- UI/Design: css, html, design, layout, responsive, frontend, component
 - Keywords: complex, tricky, critical, production
 
-**Use External Tools for (cost-efficient):**
+**Use External Tools for:**
 - Simple searches and exploration
 - Boilerplate code generation
 - Standard patterns
@@ -25,61 +45,71 @@ First, determine if this task should use Claude directly:
 ## Workflow by Task Type
 
 ### For Complex/UI Tasks → Claude Direct
-If the task matches complexity indicators above, proceed with Claude directly:
-- Read necessary files
-- Implement the solution
-- Claude excels at UI design, complex logic, and implementing fixes
+If the task matches complexity indicators, proceed with Claude directly.
 
-### For Simple Tasks → 4-Tier Workflow
+### For Simple Tasks → 4-Tier Workflow with Variables
 
-#### Step 1: Context (Gemini - FREE)
+#### Step 1: Context (ctx → $ctx_last)
 ```bash
-gemini "Find relevant code patterns and files for: $ARGUMENTS" @src/**/*.php
+ctx "relevant search terms for: $ARGUMENTS"
+# Auto-saves to $ctx_last
 ```
 
-#### Step 2: Generation (OpenRouter/Codex)
-For simple implementations:
+#### Step 2: Generation (llm with @var: reference)
 ```bash
-codex "implement: $ARGUMENTS"
-```
-Or for quick generation:
-```bash
-ai.sh fast "$ARGUMENTS"
+# For Codex (reads file directly - BEST quality)
+llm codex "implement $ARGUMENTS using @var:ctx_last"
+
+# For quick generation (inlines content)
+llm fast "$ARGUMENTS based on @var:ctx_last"
 ```
 
-#### Step 3: Review (Codex - FREE)
+#### Step 3: Review (llm with chained reference)
 ```bash
-codex "Review this code for quality issues: [paste code]"
+llm qa "Review @var:llm_response_last for quality issues"
 ```
 
 #### Step 4: Implement Fixes (Claude)
-If review finds issues, Claude implements the fixes (Codex can only identify, not fix).
+If review finds issues, Claude implements the fixes.
 
 ## Quick Reference
 
-| Task Type | Route | Command | Cost |
-|-----------|-------|---------|------|
-| Search/explore | Gemini | `gemini "query" @files` | FREE |
-| Quick code gen | OpenRouter | `ai.sh fast "task"` | ~$0.001 |
-| Tool-use tasks | OpenRouter | `ai.sh tools "task"` | ~$0.01 |
-| Simple code | Codex | `codex "implement..."` | FREE |
-| Code review | Codex → Claude | `smart-review.sh file` | FREE → Paid |
-| Complex code | Claude | Just ask Claude | Paid |
-| UI/Design | Claude | Just ask Claude | Paid |
+| Task | Command | Variable Saved |
+|------|---------|----------------|
+| Search context | `ctx "query"` | `$ctx_last` |
+| Codex (file read) | `llm codex "task @var:ctx_last"` | `$llm_response_last` |
+| Gemini (file read) | `llm gemini "task @var:ctx_last"` | `$llm_response_last` |
+| Fast (inline) | `llm fast "task @var:ctx_last"` | `$llm_response_last` |
+| QA review | `llm qa "review @var:llm_response_last"` | `$llm_response_last` |
 
-## OpenRouter Models (via ai.sh)
+## Variable Management
 
-| Command | Model | Best For |
-|---------|-------|----------|
-| `ai.sh fast` | Grok-3-mini | Quick code snippets |
-| `ai.sh tools` | DeepSeek V3 | Tool-use, file operations |
-| `ai.sh agent` | Browser preset | UI testing, screenshots |
+```bash
+var list                    # See all session variables
+var get ctx_last --meta     # Check age, size, query
+var fresh ctx_last 5        # Check if <5 min old
+var clear                   # Reset session
+```
+
+## Why Variables Matter
+
+| Approach | Data Transferred | Quality |
+|----------|-----------------|---------|
+| Old (inline) | 21KB per chain | Truncated context |
+| New (references) | 116 bytes | Full file access |
+
+**Codex/Gemini read files directly** - they get FULL context, not truncated.
 
 ## Token Comparison
+
 | Approach | Claude Tokens | When to Use |
 |----------|---------------|-------------|
-| External tools | ~15-20% | Simple tasks |
+| External + vars | ~5-10% | Simple tasks |
 | Claude direct | 100% | Complex/UI tasks |
-| Hybrid | ~40-60% | Mixed workloads |
+| Hybrid | ~30-50% | Mixed workloads |
+
+---
 
 The task to execute: $ARGUMENTS
+
+**Remember**: Use `ctx` first, then `llm` with `@var:ctx_last` references.

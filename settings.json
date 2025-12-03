@@ -6,12 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/mike/.claude/hooks/implementation-mode-reminder.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "/home/mike/.claude/hooks/enforce-agent-delegation.sh",
+            "command": "/home/mike/.claude/hooks/fast-mode-prompt.sh",
             "timeout": 5
           },
           {
@@ -43,7 +38,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/mike/.claude/hooks/enforce-fast-mode-routing.sh",
+            "command": "/home/mike/.claude/hooks/fast-mode-tool.sh",
             "timeout": 5
           },
           {
@@ -83,7 +78,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/mike/.claude/hooks/enforce-fast-mode-routing.sh",
+            "command": "/home/mike/.claude/hooks/fast-mode-tool.sh",
             "timeout": 5
           },
           {
@@ -103,7 +98,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/mike/.claude/hooks/enforce-fast-mode-routing.sh",
+            "command": "/home/mike/.claude/hooks/fast-mode-tool.sh",
             "timeout": 5
           }
         ]

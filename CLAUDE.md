@@ -101,19 +101,71 @@ cat ~/.claude/routing-mode   # "fast" or "aria"
 
 Large tool outputs are auto-saved as variables. **Use references instead of re-outputting data.**
 
-| Variable | Contains |
-|----------|----------|
-| `$grep_last` | Last Grep result |
-| `$read_last` | Last Read result |
-| `/tmp/claude_vars/grep_last` | File path |
+### Variable Store
+All session variables stored in `/tmp/claude_vars/` (cleared on restart).
 
-**Example:**
-```
-❌ Bad: "Here are the 500 matches: [... re-output everything ...]"
-✅ Good: "Results stored in $grep_last, analyzing..."
+| Variable | Contains | Auto-saved by |
+|----------|----------|---------------|
+| `$ctx_last` | Last context search | `ctx "query"` |
+| `$grep_last` | Last Grep result | Claude Grep |
+| `$read_last` | Last Read result | Claude Read |
+| `$llm_response_last` | Last LLM response | `llm.sh` |
+| `$smart_read_last` | Last smart read | `smart-read.sh` |
+
+### Variable Manager (`var.sh`)
+```bash
+var save name "content"      # Save variable
+var save name - "query"      # Save from stdin with metadata
+var get name                 # Get content
+var get name --head 10       # First 10 lines
+var get name --meta          # Show metadata (age, size, query)
+var path name                # Get file path
+var fresh name 5             # Check if <5 min old (exit 0/1)
+var list                     # List all variables
+var clear                    # Clear all
 ```
 
-This saves ~80% tokens on multi-step workflows.
+### LLM Dispatcher (`llm.sh`)
+Smart dispatcher that handles `@var:` references based on LLM capabilities:
+
+```bash
+llm codex "implement X based on @var:ctx_last"   # Codex reads file
+llm gemini "analyze @var:grep_last"              # Gemini reads file
+llm fast "summarize @var:ctx_last"               # OpenRouter: inlines content
+```
+
+| Provider | File Reading | Reference Handling |
+|----------|--------------|-------------------|
+| `codex` | ✅ Native | Passes file path |
+| `gemini` | ✅ Native | Passes file path |
+| `fast/tools/qa` | ❌ API | Inlines content (max 20KB) |
+
+### Context Builder (`ctx`)
+```bash
+ctx "auth login"                     # Search → auto-saves to $ctx_last
+llm codex "implement @var:ctx_last"  # Use saved context
+
+# Deduplication: asks before re-running same query within 5 min
+ctx "auth login"                     # "Same query run 2m ago. Use cached? [Y/n]"
+ctx "auth login" --force             # Skip dedup check
+```
+
+### Example Workflow
+```bash
+# OLD: Data passed inline (expensive)
+CONTEXT=$(ctx "auth")                    # 50KB output
+ANALYSIS=$(echo "$CONTEXT" | ai.sh qa)   # 50KB input
+codex "implement: $ANALYSIS"             # 10KB input
+# Total: ~110KB tokens
+
+# NEW: References passed (cheap)
+ctx "auth"                               # Saves @var:ctx_last
+llm qa "analyze @var:ctx_last"           # LLM reads file directly
+llm codex "implement @var:llm_response_last"
+# Total: ~200 bytes + LLMs read files
+```
+
+**Rule:** Never re-output large data. Use `@var:name` references.
 
 ## Tool Efficiency Rules
 
@@ -142,7 +194,9 @@ Source: `~/.claude/scripts/shortcuts.sh`
 | `ba` | `~/.claude/scripts/browser-agent.sh` | Browser agent (headless) |
 | `bav` | `~/.claude/scripts/browser-agent.sh visible` | Browser agent (visible) |
 | `cctx` | `~/.claude/scripts/codex-with-context.sh` | Codex with index context |
-| `ctx` | `~/.claude/scripts/ctx.sh` | Context builder (no AI) |
+| `ctx` | `~/.claude/scripts/ctx.sh` | Context builder (auto-saves) |
+| `var` | `~/.claude/scripts/var.sh` | Variable manager |
+| `llm` | `~/.claude/scripts/llm.sh` | Smart LLM dispatcher |
 | `recent-changes` | `~/.claude/scripts/recent-changes.sh` | List recent file changes |
 | `cdlyk` | - | cd to LYK-Cake4-Admin |
 | `cdverity` | - | cd to VerityCom |

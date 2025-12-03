@@ -22,8 +22,15 @@ function bav { ~/.claude/scripts/browser-agent.sh visible "$@"; }
 # Codex with index context
 function cctx { ~/.claude/scripts/codex-with-context.sh "$@"; }
 
-# Context builder (no AI call) - for any agent
+# Context builder (auto-saves to $ctx_last)
 function ctx { ~/.claude/scripts/ctx.sh "$@"; }
+
+# Variable manager (session variables for LLM chains)
+function var { ~/.claude/scripts/var.sh "$@"; }
+
+# Smart LLM dispatcher (handles @var: references)
+function llm { ~/.claude/scripts/llm.sh "$@"; }
+
 function recent-changes { ~/.claude/scripts/recent-changes.sh "$@"; }
 
 # Navigation (saves 50+ chars)
@@ -32,6 +39,6 @@ function cdverity { cd /mnt/d/MikesDev/www/Whitlock/Verity/VerityCom; }
 function cdwww { cd /mnt/d/MikesDev/www; }
 
 # Exports
-export -f dbquery lyksearch veritysearch cake php74 php81 ba bav cctx ctx recent-changes cdlyk cdverity cdwww
+export -f dbquery lyksearch veritysearch cake php74 php81 ba bav cctx ctx var llm recent-changes cdlyk cdverity cdwww
 export LYK_LOGS VERITY_LOGS
 alias smart-review='~/.claude/scripts/smart-review.sh'
