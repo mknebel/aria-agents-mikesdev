@@ -108,6 +108,17 @@ echo "📊 Found $MATCH_COUNT matches" >&2
 # Save Pass 1
 echo "$RG_RESULTS" > "$VAR_DIR/search_pass1"
 
+# ━━━ Learn from ripgrep: Add found files to index ━━━
+INCREMENTAL_ADD="$HOME/.claude/scripts/index-v2/incremental-add.sh"
+if [[ -x "$INCREMENTAL_ADD" ]] && [[ -d "$INDEX_DIR" ]]; then
+    FOUND_FILES=$(echo "$RG_RESULTS" | cut -d':' -f1 | sort -u | tr '\n' ' ')
+    if [[ -n "$FOUND_FILES" ]]; then
+        echo "📝 Learning: Indexing found files..." >&2
+        # Run incremental index update in background
+        ("$INCREMENTAL_ADD" "$SEARCH_PATH_ABS" $FOUND_FILES) &>/dev/null &
+    fi
+fi
+
 # If skip refine or no API access, return Pass 1
 if [[ $SKIP_REFINE -eq 1 ]]; then
     echo "" >&2
