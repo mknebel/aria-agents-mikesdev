@@ -36,8 +36,22 @@ EOF
         ;;
 
     Grep)
-        # Claude's Grep is efficient - only warn on very broad exploratory searches
-        # Allow targeted searches to proceed without warning
+        # Route to smart-search.sh which uses the index
+        cat << EOF
+<pre-tool-use-hook>
+💡 FAST MODE: Use indexed search instead
+
+smart-search.sh "$PATTERN" uses:
+- Bloom filter for instant rejection
+- Inverted index for O(1) lookups
+- Synonyms & stemming
+- Then ripgrep for verification
+
+Command: smart-search.sh "$PATTERN"
+
+Or for symbol lookup: /lookup $PATTERN
+</pre-tool-use-hook>
+EOF
         ;;
 
 

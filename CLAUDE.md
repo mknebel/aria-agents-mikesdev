@@ -50,7 +50,8 @@ Check `~/.claude/routing-mode` for current mode. Default is **fast** (external t
 
 | Task Type | Tool | Command | Cost |
 |-----------|------|---------|------|
-| **Pattern search** | Claude Grep | Use directly | Included |
+| **Pattern search** | smart-search.sh | `smart-search.sh "query"` | FREE (indexed) |
+| **Symbol lookup** | /lookup | `/lookup ClassName` | FREE (indexed) |
 | **File listing** | Claude Glob | Use directly | Included |
 | Semantic analysis | Gemini | `gemini "query" @files` | FREE |
 | Quick code gen | OpenRouter | `ai.sh fast "prompt"` | ~$0.001 |
