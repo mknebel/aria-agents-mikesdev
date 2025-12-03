@@ -7,7 +7,11 @@ TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input // empty' 2>/dev/null)
 TOOL_OUTPUT=$(echo "$INPUT" | jq -r '.tool_output // empty' 2>/dev/null)
 
+# Exit silently if no tool name
 [[ -z "$TOOL_NAME" ]] && exit 0
+
+# Ensure jq is available
+command -v jq >/dev/null 2>&1 || exit 0
 
 VAR_DIR="/tmp/claude_vars"
 CACHE_DIR="/tmp/claude_tool_cache"

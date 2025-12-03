@@ -7,7 +7,9 @@ INPUT=$(cat)
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input // empty' 2>/dev/null)
 
+# Exit silently if no tool name or jq missing
 [[ -z "$TOOL_NAME" ]] && exit 0
+command -v jq >/dev/null 2>&1 || exit 0
 
 CACHE_DIR="/tmp/claude_tool_cache"
 mkdir -p "$CACHE_DIR"
