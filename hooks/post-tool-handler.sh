@@ -12,13 +12,11 @@ TOOL=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null) || exit 0
 
 case "$TOOL" in
     Grep)
-        # Extract content from grep response
         OUTPUT=$(echo "$INPUT" | jq -r '.tool_response.content // empty' 2>/dev/null)
         [ -n "$OUTPUT" ] && echo "$OUTPUT" > "$VAR_DIR/grep_last.txt"
         ;;
     Read)
-        # Extract output from read response
-        OUTPUT=$(echo "$INPUT" | jq -r '.tool_response.output // empty' 2>/dev/null)
+        OUTPUT=$(echo "$INPUT" | jq -r '.tool_response.file.content // empty' 2>/dev/null)
         [ -n "$OUTPUT" ] && echo "$OUTPUT" > "$VAR_DIR/read_last.txt"
         ;;
 esac
