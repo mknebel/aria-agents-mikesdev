@@ -8,9 +8,10 @@ ARIA SESSION ACTIVE. Claude = orchestrator. External tools + subagents do the wo
 ## Cost Hierarchy (STRICT)
 ```
 1. FREE tools first   → ctx, gemini, codex-save.sh, quality-gate.sh
-2. Haiku subagents    → aria-coder, aria-qa, Explore
-3. Opus (UI/design)   → aria-ui-ux (visual/UX needs quality)
-4. Opus (LAST RESORT) → aria-thinking (only for complex/failed tasks)
+2. Haiku for CLI      → git, winscp, composer, npm, lint, test (deterministic)
+3. Haiku subagents    → aria-coder, aria-qa, Explore
+4. Opus (UI/design)   → aria-ui-ux (visual/UX needs quality)
+5. Opus (LAST RESORT) → aria-thinking (only for complex/failed tasks)
 ```
 
 ## Claude's Role
@@ -78,12 +79,29 @@ Task(aria-thinking, opus) → then back to haiku agents
 | Test | `composer test` / `npm test` | Assuming pass |
 | Quality | `quality-gate.sh` | Skipping |
 
+## CLI Execution (Haiku)
+All deterministic CLI commands route to Haiku agent:
+```bash
+# Pattern: Task(aria-admin, haiku) for CLI work
+Task(aria-admin, haiku, prompt:"Run: git add . && git commit -m 'msg' && git push")
+Task(aria-admin, haiku, prompt:"Run: winscp.com /script=deploy.txt")
+Task(aria-admin, haiku, prompt:"Run: composer install && composer test")
+Task(aria-admin, haiku, prompt:"Run: npm install && npm run build")
+```
+
+**CLI commands (always Haiku):**
+- git (add, commit, push, pull, status)
+- winscp, rsync, scp (deployments)
+- composer, npm, yarn (package managers)
+- lint, test, typecheck (validation)
+
 ## Rules
 1. **FREE first**: Always try external tools before subagents
-2. **Haiku default**: Never use opus unless task failed or explicitly complex
-3. **Parallel when independent**: Single message, multiple Task calls
-4. **Claude orchestrates only**: No code generation in main thread
-5. **Quality gate mandatory**: Every implementation ends with `quality-gate.sh`
+2. **Haiku for CLI**: All deterministic commands via aria-admin (haiku)
+3. **Haiku default**: Never use opus unless task failed or explicitly complex
+4. **Parallel when independent**: Single message, multiple Task calls
+5. **Claude orchestrates only**: No code generation in main thread
+6. **Quality gate mandatory**: Every implementation ends with `quality-gate.sh`
 
 ## Agent Prompt Template
 ```
