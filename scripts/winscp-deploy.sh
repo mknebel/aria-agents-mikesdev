@@ -7,6 +7,9 @@
 
 set -e
 
+# Source ARIA config for temp directories
+source ~/.claude/scripts/aria-config.sh 2>/dev/null || true
+
 WINSCP="/mnt/c/Program Files (x86)/WinSCP/WinSCP.com"
 
 # Check WinSCP exists
@@ -35,11 +38,9 @@ if [[ -z "$CONNECTION" || -z "$LOCAL_BASE" || -z "$REMOTE_BASE" || $# -eq 0 ]]; 
     exit 1
 fi
 
-# Use Windows-accessible temp (WinSCP can't access WSL /tmp)
-TEMP_DIR="/mnt/c/temp"
-mkdir -p "$TEMP_DIR" 2>/dev/null
-SCRIPT_FILE="$TEMP_DIR/winscp-deploy-$$.txt"
-LOG_FILE="$TEMP_DIR/winscp-deploy-$$.log"
+# Use Windows-accessible project temp (WinSCP can't access WSL /tmp)
+SCRIPT_FILE="$(aria_temp_file_win winscp-deploy-$$.txt)"
+LOG_FILE="$(aria_temp_file_win winscp-deploy-$$.log)"
 
 echo "═══════════════════════════════════════════════════════════════"
 echo "WinSCP Deployment"
