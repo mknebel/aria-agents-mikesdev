@@ -1,11 +1,11 @@
 ---
-description: Plan task with external tools (Gemini+Codex FREE)
+description: Collaborative planning (Gemini 1M context + Codex) - FREE
 argument-hint: <task description>
 ---
 
-# Plan Pipeline Entry Point
+# Collaborative Plan Pipeline
 
-Run the external-first planning pipeline:
+Run the Gemini + Codex collaborative planning:
 
 ```bash
 ~/.claude/scripts/plan-pipeline.sh "$ARGUMENTS"
@@ -14,18 +14,32 @@ Run the external-first planning pipeline:
 ## Flow
 
 ```
-Gemini (context, FREE) → Codex (plan, FREE) → You review
+Gemini (1M context) → Codex (plan) → Gemini (review) → Claude
+       ↓                   ↓              ↓
+  deep analysis    implementation    validation
+     FREE              FREE            FREE
 ```
+
+## How It Works
+
+1. **Gemini** analyzes codebase with 1M token context
+2. **Codex** creates implementation plan using Gemini's analysis
+3. **Gemini** reviews plan against codebase for accuracy
+4. **Claude** receives combined output for final review
 
 ## After Review
 
 | Action | Command |
 |--------|---------|
-| APPROVE | `/apply` to implement |
-| MODIFY | Edit plan, then `/apply` |
-| REJECT | `/thinking` for Opus reasoning |
+| APPROVE | `/apply` (aria-coder implements) |
+| MODIFY | Edit `$codex_plan`, then `/apply` |
+| REJECT | `/thinking` (Opus deep reasoning) |
 
 ## Variables Created
 
-- `$codex_plan` - The implementation plan
-- `$gemini_context` - Gathered context (cached 10 min)
+| Variable | Contents |
+|----------|----------|
+| `$gemini_context` | Deep codebase analysis |
+| `$codex_plan` | Implementation plan |
+| `$gemini_review` | Plan validation |
+| `$combined_plan` | All outputs combined |

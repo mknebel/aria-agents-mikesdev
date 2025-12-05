@@ -47,26 +47,54 @@ Use Claude Opus for UI work - better visual/UX reasoning.
 
 ### New Design (create new UI/component)
 ```
-Task(aria-ui-ux, opus) + Bash(gemini "design: <request>")  [PARALLEL]
-        ↓
-Compare/combine both outputs → best result
-        ↓
-quality-gate.sh
+/design "component description"
+    ↓
+┌─────────────────────────────────────────────────────┐
+│              PARALLEL DESIGN PLANNING               │
+├─────────────────┬─────────────────┬─────────────────┤
+│ Gemini          │ Codex           │ Claude Opus 4.5 │
+│ (latest)        │ (latest)        │ (aria-ui-ux)    │
+│ FREE            │ $               │ $$              │
+└────────┬────────┴────────┬────────┴────────┬────────┘
+         └────────────────┬┴─────────────────┘
+                          ↓
+              Compare/combine all 3 outputs
+                          ↓
+                   quality-gate.sh
 ```
-Run Opus and Gemini in parallel, then pick best or merge ideas.
 
-**Command pattern:**
-```bash
-# In single Claude response, call BOTH:
-Task(aria-ui-ux, model:opus, prompt:"Design <component>...")
-Bash(gemini "Design a <component> with: <requirements>")
-# Then consolidate results
-```
+**Usage:** `/design "responsive dashboard with charts and filters"`
+
+**Flow:**
+1. Script runs Gemini + Codex in parallel
+2. Claude launches aria-ui-ux (Opus) for 3rd design
+3. Claude evaluates all 3 by category (structure, styling, a11y, code, UX)
+4. **Pick best OR merge best points** (no averaging, omit weak parts)
+5. Implement winning design
+6. quality-gate.sh
+
+**Variables created:**
+- `$gemini_design`: Gemini Pro design
+- `$codex_design`: Codex Max design
+- `$design_comparison`: Combined for review
 
 ### Failed/Blocked
 ```
 Task(aria-thinking, opus) → then back to haiku agents
 ```
+
+## Planning (Gemini + Codex Collaborative)
+For tasks >3 files or "implement/refactor/build":
+```
+/plan "task description"
+    ↓
+Gemini (1M context) → Codex (plan) → Gemini (review)
+    ↓
+Claude reviews combined output
+    ↓
+/apply → aria-coder implements
+```
+All planning is FREE - no Claude tokens until final review.
 
 ## External-First (ALL agents)
 | Task | Use | NEVER |
@@ -74,7 +102,7 @@ Task(aria-thinking, opus) → then back to haiku agents
 | Context | `ctx "query"` | Multiple Reads |
 | Code gen | `codex-save.sh` | Inline generation |
 | Analysis | `ai.sh fast` | Claude analysis |
-| Planning | `plan-pipeline.sh` | Manual planning |
+| Planning | `/plan` (Gemini+Codex) | Manual planning |
 | Lint | `composer cs-check` / `npm run lint` | Guessing |
 | Test | `composer test` / `npm test` | Assuming pass |
 | Quality | `quality-gate.sh` | Skipping |
