@@ -1,7 +1,7 @@
 #!/bin/bash
 # Post-tool hook - Caches results and shows completion status
+# ARIA mode with integrated external-first (no mode toggle needed)
 
-MODE=$(cat "$HOME/.claude/routing-mode" 2>/dev/null || echo "fast")
 INPUT=$(cat) || exit 0
 command -v jq >/dev/null || exit 0
 
@@ -11,16 +11,15 @@ TOOL=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 VAR_DIR="/tmp/claude_vars"
 mkdir -p "$VAR_DIR"
 
-FAST_ICON="⚡"
-ARIA_ICON="🎭"
-MODE_ICON=$([[ "$MODE" == "fast" ]] && echo "$FAST_ICON" || echo "$ARIA_ICON")
+# ARIA icon (external-first integrated)
+ICON="🎭"
 
 case "$TOOL" in
     Grep)
         RESULT=$(echo "$INPUT" | jq -r '.tool_result // empty' 2>/dev/null)
         if [ -n "$RESULT" ]; then
             echo "$RESULT" > "$VAR_DIR/grep_last"
-            echo "$MODE_ICON Grep → \$grep_last" >&2
+            echo "$ICON Grep → \$grep_last" >&2
         fi
         ;;
     Read)
@@ -33,7 +32,7 @@ case "$TOOL" in
             CACHE_KEY=$(echo "${FILE}:${MTIME}" | md5sum | cut -d' ' -f1)
             mkdir -p "$HOME/.claude/cache/context/files"
             echo "$RESULT" > "$HOME/.claude/cache/context/files/$CACHE_KEY"
-            echo "$MODE_ICON Read → \$read_last" >&2
+            echo "$ICON Read → \$read_last" >&2
         fi
         ;;
     Bash)
@@ -41,13 +40,13 @@ case "$TOOL" in
         CMD=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
         if [[ "$CMD" == *"ctx "* ]] && [ -n "$RESULT" ]; then
             echo "$RESULT" > "$VAR_DIR/ctx_last"
-            echo "$MODE_ICON ctx → \$ctx_last" >&2
+            echo "$ICON ctx → \$ctx_last" >&2
         elif [[ "$CMD" == *"codex"* ]] && [ -n "$RESULT" ]; then
             echo "$RESULT" > "$VAR_DIR/codex_last"
-            echo "$MODE_ICON codex → \$codex_last" >&2
+            echo "$ICON codex → \$codex_last" >&2
         elif [[ "$CMD" == *"gemini"* ]] && [ -n "$RESULT" ]; then
             echo "$RESULT" > "$VAR_DIR/gemini_last"
-            echo "$MODE_ICON gemini → \$gemini_last" >&2
+            echo "$ICON gemini → \$gemini_last" >&2
         fi
         ;;
 esac

@@ -1,24 +1,29 @@
 # Claude Code
 
-## Workflow
-`plan-pipeline.sh "task"` → Review → aria-coder applies → quality-gate.sh
+## Session Start
+Any of these activate ARIA workflow:
+- `/aria` - activate for session
+- "use aria" / "aria mode" - activate for session
+- "aria <task>" - run task with ARIA workflow immediately
 
-Complex/failed → aria-thinking (Opus) → Plan → Haiku implements.
+Examples: `aria fix the login bug` | `aria implement user auth`
 
-## External-First (Saves 85% tokens)
-| Task | Use | NOT |
-|------|-----|-----|
-| Context | `ctx "query"` or `gemini` | Multiple Reads |
-| Generate | `codex-save.sh` or `llm` | Direct output >10 lines |
-| Search | `ctx` then Read specific | Grep loops |
+## ARIA Workflow
+```
+plan-pipeline.sh → Review → aria-coder → quality-gate.sh
+    (FREE)                   (Haiku)       (MANDATORY)
+```
 
-**Auto-invoke**: >3 files or "implement/refactor/build" → `plan-pipeline.sh` first
+## External-First (MANDATORY)
+| Action | Tool | NEVER |
+|--------|------|-------|
+| Context | `ctx` or `gemini @.` | Multiple Reads |
+| Code >3 lines | `codex-save.sh` | Inline generation |
+| Quick check | `ai.sh fast` | Full analysis |
 
-## Size Limits
-Agent ≤35 | Command ≤40 | Code >3 lines → scripts/
-
-## Cache
-`cached-read.sh` | `cached-structure.sh` | `cache-manager.sh stats`
+## Triggers
+- >3 files OR "implement/refactor/build" → `plan-pipeline.sh` first
+- Complex/failed → aria-thinking (Opus)
 
 ## Docs
-Agents: ~/.claude/agents/ | Scripts: ~/.claude/scripts/
+Agents: `~/.claude/agents/` | Scripts: `~/.claude/scripts/`

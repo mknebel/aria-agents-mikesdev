@@ -1,8 +1,7 @@
 #!/bin/bash
-# Pre-tool hook - Shows mode status and enforces external-first
-# Outputs visible status that Claude sees in tool response
+# Pre-tool hook - Enforces external-first workflow
+# ARIA mode with integrated external-first (no mode toggle needed)
 
-MODE=$(cat "$HOME/.claude/routing-mode" 2>/dev/null || echo "fast")
 INPUT=$(cat) || exit 0
 command -v jq >/dev/null || exit 0
 
@@ -16,14 +15,12 @@ CTX_USED=$(jq -r '.ctx_used // false' "$STATE_FILE" 2>/dev/null)
 FILES_READ=$(jq -r '.files_read // 0' "$STATE_FILE" 2>/dev/null)
 GEN_COUNT=$(jq -r '.gen_count // 0' "$STATE_FILE" 2>/dev/null)
 
-# Mode icons
-FAST_ICON="⚡"
-ARIA_ICON="🎭"
-MODE_ICON=$([[ "$MODE" == "fast" ]] && echo "$FAST_ICON" || echo "$ARIA_ICON")
+# ARIA icon (external-first is integrated)
+ICON="🎭"
 
 # Status output function - Claude sees this
 status_msg() {
-    echo "{\"status\":\"$1\",\"mode\":\"$MODE\",\"icon\":\"$MODE_ICON\"}"
+    echo "{\"status\":\"$1\",\"icon\":\"$ICON\"}"
 }
 
 case "$TOOL" in
@@ -44,7 +41,7 @@ case "$TOOL" in
         if [ "$AGENT" = "Explore" ]; then
             jq '.ctx_used = true' "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
         fi
-        status_msg "$ARIA_ICON $AGENT agent"
+        status_msg "$ICON $AGENT agent"
         ;;
     Bash)
         CMD=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
@@ -56,7 +53,7 @@ case "$TOOL" in
             jq ".gen_count = $GEN_COUNT" "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
             status_msg "✓ External generation"
         elif [[ "$CMD" == *"plan-pipeline"* ]]; then
-            status_msg "$FAST_ICON Pipeline started"
+            status_msg "⚡ Pipeline started"
         elif [[ "$CMD" == *"quality-gate"* ]]; then
             status_msg "🔍 Quality gate"
         fi
