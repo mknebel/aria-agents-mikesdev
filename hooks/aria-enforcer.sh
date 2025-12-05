@@ -9,7 +9,7 @@ TOOL=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 [ -z "$TOOL" ] && exit 0
 
 STATE_FILE="$HOME/.claude/.aria-state"
-[ ! -f "$STATE_FILE" ] && echo '{"reads":0,"writes":0,"files_touched":[]}' > "$STATE_FILE"
+[ ! -f "$STATE_FILE" ] && echo '{"reads":0,"writes":0,"greps":0,"files_touched":[]}' > "$STATE_FILE"
 
 READS=$(jq -r '.reads // 0' "$STATE_FILE" 2>/dev/null)
 WRITES=$(jq -r '.writes // 0' "$STATE_FILE" 2>/dev/null)
@@ -25,6 +25,18 @@ block() {
 }
 
 case "$TOOL" in
+    Grep)
+        # Grep tool uses ripgrep (rg) internally - this is fine
+        # But too many greps might indicate need for ctx/gemini
+        GREPS=$(jq -r '.greps // 0' "$STATE_FILE" 2>/dev/null)
+        GREPS=$((GREPS + 1))
+        jq ".greps = $GREPS" "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
+        if [ "$GREPS" -gt 5 ]; then
+            warn "Many grep searches ($GREPS). Consider ctx or gemini @. for broader context"
+        fi
+        echo "{\"status\":\"✓ ARIA: Using Grep (ripgrep)\"}"
+        ;;
+
     Read)
         READS=$((READS + 1))
         jq ".reads = $READS" "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
@@ -59,6 +71,11 @@ case "$TOOL" in
 
     Bash)
         CMD=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
+
+        # Check for bash grep (should use Grep tool or rg)
+        if [[ "$CMD" == *"grep "* ]] && [[ "$CMD" != *"rg "* ]]; then
+            warn "Using bash grep. Prefer Grep tool (uses ripgrep) or rg command"
+        fi
 
         # Check for direct git commits (should use haiku agent)
         if [[ "$CMD" == *"git commit"* ]] || [[ "$CMD" == *"git push"* ]]; then
