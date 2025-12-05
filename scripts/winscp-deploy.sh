@@ -35,8 +35,11 @@ if [[ -z "$CONNECTION" || -z "$LOCAL_BASE" || -z "$REMOTE_BASE" || $# -eq 0 ]]; 
     exit 1
 fi
 
-SCRIPT_FILE="/tmp/winscp-deploy-$$.txt"
-LOG_FILE="/tmp/winscp-deploy-$$.log"
+# Use Windows-accessible temp (WinSCP can't access WSL /tmp)
+TEMP_DIR="/mnt/c/temp"
+mkdir -p "$TEMP_DIR" 2>/dev/null
+SCRIPT_FILE="$TEMP_DIR/winscp-deploy-$$.txt"
+LOG_FILE="$TEMP_DIR/winscp-deploy-$$.log"
 
 echo "═══════════════════════════════════════════════════════════════"
 echo "WinSCP Deployment"
