@@ -1,9 +1,13 @@
 ---
-description: Enable ARIA workflow - parallel subagents for speed + quality
+description: ARIA status check (ARIA is ALWAYS enforced)
 argument-hint:
 ---
 
-ARIA SESSION ACTIVE. Claude = orchestrator. External tools + subagents do the work.
+## ARIA IS ALWAYS ENFORCED - THIS IS A STATUS CHECK
+
+ARIA workflow is **permanently active**. This command shows current rules.
+
+Claude = orchestrator. External tools + subagents do the work. **No exceptions.**
 
 ## Cost Hierarchy (STRICT)
 ```
