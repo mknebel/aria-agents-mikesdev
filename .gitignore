@@ -35,3 +35,8 @@ browser-videos/
 
 # Generated indexes (project-specific, regenerated on demand)
 indexes/
+
+# ARIA runtime state (don't track)
+.aria-state
+.aria-files
+.aria.lock

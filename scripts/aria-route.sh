@@ -3,6 +3,10 @@
 # Routes tasks to optimal models based on task type
 
 source ~/.claude/scripts/aria-state.sh 2>/dev/null
+source ~/.claude/scripts/aria-session.sh 2>/dev/null
+
+# Session mode (set ARIA_NO_SESSION=1 to disable)
+ARIA_SESSION_ENABLED=${ARIA_SESSION_ENABLED:-1}
 
 # Model definitions with characteristics (Updated Dec 2025)
 # GPT-5.1 beats o3 on coding (74.9% vs 69.1%) AND math (94.6% vs 88.9%)
@@ -23,11 +27,6 @@ declare -A MODEL_INFO=(
     # Power tier (complex tasks)
     ["complex"]='gpt-5.1-codex-max|Flagship, deep+fast reasoning|Pro sub'
     ["max"]='gpt-5.1-codex-max:extra_high|Maximum reasoning depth|Pro sub'
-
-    # o-series (explicit step-by-step only)
-    ["explicit"]='o4-mini|Quick explicit reasoning|Pro sub'
-    ["proof"]='o3|Deep step-by-step proofs|Pro sub'
-    ["reliable"]='o3-pro|Most reliable, last resort|Pro sub'
 )
 
 # Reasoning level flags (append to model with -c reasoning=X)
@@ -41,10 +40,8 @@ declare -A MODEL_INFO=(
 # 3. gpt-5.1 (general) - standard tasks, broad knowledge
 # 4. gpt-5.1-codex (code) - code-optimized tasks
 # 5. gpt-5.1-codex-max (complex) - flagship for hard problems
-# 6. o4-mini/o3 (explicit) - only for step-by-step proofs
-# 7. o3-pro (reliable) - only when everything else fails
-# 8. Claude Haiku - file operations only (if codex-mini doesn't work)
-# 9. Claude Opus - UI/UX only (last resort)
+# 6. Claude Haiku - file operations only (if codex-mini doesn't work)
+# 7. Claude Opus - UI/UX only (last resort)
 
 aria_get_model() {
     local task_type="${1:-code}"
@@ -60,7 +57,9 @@ aria_get_model() {
 aria_route() {
     local task_type="$1"
     shift
-    local prompt="$*"
+    local user_prompt="$*"
+    local full_prompt=""
+    local response=""
 
     local model_spec=$(aria_get_model "$task_type")
 
@@ -69,14 +68,30 @@ aria_route() {
     local reasoning="${model_spec##*:}"
     [[ "$reasoning" == "$model" ]] && reasoning=""
 
-    echo "🤖 Routing to: $model${reasoning:+ (reasoning: $reasoning)}" >&2
+    # Build prompt with session context (if enabled)
+    if [[ "$ARIA_SESSION_ENABLED" == "1" ]] && type aria_session_build_prompt &>/dev/null; then
+        full_prompt=$(aria_session_build_prompt "$user_prompt")
+        echo "🤖 Routing to: $model${reasoning:+ (reasoning: $reasoning)} [session: $(aria_session_current 2>/dev/null | cut -c1-8)]" >&2
+    else
+        full_prompt="$user_prompt"
+        echo "🤖 Routing to: $model${reasoning:+ (reasoning: $reasoning)}" >&2
+    fi
 
     # Use codex exec for non-interactive
     if command -v codex &>/dev/null; then
         if [[ -n "$reasoning" ]]; then
-            codex -c model="$model" -c reasoning="$reasoning" exec "$prompt"
+            response=$(codex -c model="$model" -c reasoning="$reasoning" exec "$full_prompt" 2>&1)
         else
-            codex -c model="$model" exec "$prompt"
+            response=$(codex -c model="$model" exec "$full_prompt" 2>&1)
+        fi
+
+        # Output response
+        echo "$response"
+
+        # Save to session (if enabled)
+        if [[ "$ARIA_SESSION_ENABLED" == "1" ]] && type aria_session_add_user &>/dev/null; then
+            aria_session_add_user "$user_prompt" "$model" 2>/dev/null
+            aria_session_add_assistant "$response" "$model" 2>/dev/null
         fi
 
         # Log model usage
@@ -85,9 +100,6 @@ aria_route() {
             *codex-mini*) aria_log_model "codex_mini" ;;
             gpt-5.1-codex) aria_log_model "codex" ;;
             gpt-5.1) aria_log_model "gpt51" ;;
-            o3-pro) aria_log_model "o3_pro" ;;
-            o3) aria_log_model "o3" ;;
-            o4-mini) aria_log_model "o4_mini" ;;
         esac
         aria_inc "external"
     else
@@ -133,12 +145,8 @@ aria_show_models() {
     echo "  POWER TIER (complex tasks)"
     printf "  %-12s %-24s %-40s %s\n" "complex" "gpt-5.1-codex-max" "Flagship, deep+fast reasoning" "Pro sub"
     printf "  %-12s %-24s %-40s %s\n" "max" "codex-max (extra_high)" "Maximum reasoning depth" "Pro sub"
-    echo ""
-    echo "  O-SERIES (explicit step-by-step only)"
-    printf "  %-12s %-24s %-40s %s\n" "explicit" "o4-mini" "Quick explicit reasoning" "Pro sub"
-    printf "  %-12s %-24s %-40s %s\n" "proof" "o3" "Deep step-by-step proofs" "Pro sub"
-    printf "  %-12s %-24s %-40s %s\n" "reliable" "o3-pro" "Most reliable, last resort" "Pro sub"
 
+    echo ""
     echo ""
     echo "  Priority Order:"
     echo "  ────────────────────────────────────────────────────────────────"
@@ -147,10 +155,8 @@ aria_show_models() {
     echo "  3. gpt-5.1          General tasks"
     echo "  4. gpt-5.1-codex    Code-optimized"
     echo "  5. codex-max        Complex problems"
-    echo "  6. o4-mini/o3       Explicit step-by-step proofs"
-    echo "  7. o3-pro           Only when everything fails"
-    echo "  8. Haiku            File ops only (fallback)"
-    echo "  9. Opus             UI/UX only (last resort)"
+    echo "  6. Haiku            File ops only (fallback)"
+    echo "  7. Opus             UI/UX only (last resort)"
     echo ""
     echo "  Usage:"
     echo "  ────────────────────────────────────────────────────────────────"
@@ -159,7 +165,7 @@ aria_show_models() {
     echo "  aria route general \"solve problem\"         # Standard"
     echo "  aria route code \"implement feature\"        # Code-optimized"
     echo "  aria route complex \"hard problem\"          # Power"
-    echo "  aria route proof \"prove theorem\"           # o3 explicit"
+    echo "  aria route max \"very hard problem\"         # Maximum reasoning"
     echo ""
     echo "  Reasoning Levels (codex CLI):"
     echo "  ────────────────────────────────────────────────────────────────"

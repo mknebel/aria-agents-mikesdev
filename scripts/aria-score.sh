@@ -117,19 +117,17 @@ aria_show_summary() {
     local claude_haiku=$(jq -r '.models.claude_haiku // 0' "$ARIA_STATE" 2>/dev/null)
     local codex_max=$(jq -r '.models.codex_max // 0' "$ARIA_STATE" 2>/dev/null)
     local codex_mini=$(jq -r '.models.codex_mini // 0' "$ARIA_STATE" 2>/dev/null)
-    local o3=$(jq -r '.models.o3 // 0' "$ARIA_STATE" 2>/dev/null)
-    local o4_mini=$(jq -r '.models.o4_mini // 0' "$ARIA_STATE" 2>/dev/null)
+    local codex=$(jq -r '.models.codex // 0' "$ARIA_STATE" 2>/dev/null)
+    local gpt51=$(jq -r '.models.gpt51 // 0' "$ARIA_STATE" 2>/dev/null)
     local gemini=$(jq -r '.models.gemini // 0' "$ARIA_STATE" 2>/dev/null)
-    local gemini_flash=$(jq -r '.models.gemini_flash // 0' "$ARIA_STATE" 2>/dev/null)
 
-    [[ $claude_opus -gt 0 ]] && printf "${CYAN}│${RESET}  ${MAGENTA}claude-opus${RESET}               %4d                                          ${CYAN}│${RESET}\n" "$claude_opus"
-    [[ $claude_haiku -gt 0 ]] && printf "${CYAN}│${RESET}  ${BLUE}claude-haiku${RESET}              %4d                                          ${CYAN}│${RESET}\n" "$claude_haiku"
-    [[ $codex_max -gt 0 ]] && printf "${CYAN}│${RESET}  ${YELLOW}gpt-5.1-codex-max${RESET}         %4d                                          ${CYAN}│${RESET}\n" "$codex_max"
-    [[ $codex_mini -gt 0 ]] && printf "${CYAN}│${RESET}  ${DIM}gpt-5.1-codex-mini${RESET}        %4d                                          ${CYAN}│${RESET}\n" "$codex_mini"
-    [[ $o3 -gt 0 ]] && printf "${CYAN}│${RESET}  ${WHITE}o3${RESET}                        %4d                                          ${CYAN}│${RESET}\n" "$o3"
-    [[ $o4_mini -gt 0 ]] && printf "${CYAN}│${RESET}  ${DIM}o4-mini${RESET}                   %4d                                          ${CYAN}│${RESET}\n" "$o4_mini"
     [[ $gemini -gt 0 ]] && printf "${CYAN}│${RESET}  ${GREEN}gemini (FREE)${RESET}             %4d                                          ${CYAN}│${RESET}\n" "$gemini"
-    [[ $gemini_flash -gt 0 ]] && printf "${CYAN}│${RESET}  ${GREEN}gemini-flash (FREE)${RESET}       %4d                                          ${CYAN}│${RESET}\n" "$gemini_flash"
+    [[ $codex_mini -gt 0 ]] && printf "${CYAN}│${RESET}  ${DIM}gpt-5.1-codex-mini${RESET}        %4d                                          ${CYAN}│${RESET}\n" "$codex_mini"
+    [[ $gpt51 -gt 0 ]] && printf "${CYAN}│${RESET}  ${WHITE}gpt-5.1${RESET}                   %4d                                          ${CYAN}│${RESET}\n" "$gpt51"
+    [[ $codex -gt 0 ]] && printf "${CYAN}│${RESET}  ${BLUE}gpt-5.1-codex${RESET}             %4d                                          ${CYAN}│${RESET}\n" "$codex"
+    [[ $codex_max -gt 0 ]] && printf "${CYAN}│${RESET}  ${YELLOW}gpt-5.1-codex-max${RESET}         %4d                                          ${CYAN}│${RESET}\n" "$codex_max"
+    [[ $claude_haiku -gt 0 ]] && printf "${CYAN}│${RESET}  ${BLUE}claude-haiku${RESET}              %4d                                          ${CYAN}│${RESET}\n" "$claude_haiku"
+    [[ $claude_opus -gt 0 ]] && printf "${CYAN}│${RESET}  ${MAGENTA}claude-opus${RESET}               %4d                                          ${CYAN}│${RESET}\n" "$claude_opus"
 
     echo -e "${CYAN}│${RESET}                                                                             ${CYAN}│${RESET}"
 

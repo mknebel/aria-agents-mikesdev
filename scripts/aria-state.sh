@@ -33,10 +33,9 @@ aria_init() {
     "claude_haiku": 0,
     "codex_max": 0,
     "codex_mini": 0,
-    "o3": 0,
-    "o4_mini": 0,
-    "gemini": 0,
-    "gemini_flash": 0
+    "codex": 0,
+    "gpt51": 0,
+    "gemini": 0
   },
   "tokens": {
     "claude_in": 0,
