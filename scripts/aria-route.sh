@@ -72,7 +72,7 @@ aria_gemini() {
 
 aria_show_models() {
     echo ""
-    echo "ARIA Model Routing"
+    echo "ARIA Model Routing (Codex CLI)"
     echo "══════════════════════════════════════════════════════════════════"
     echo ""
     printf "  %-12s %-24s %-30s %s\n" "Type" "Model" "Best For" "Cost"
@@ -87,11 +87,26 @@ aria_show_models() {
     done
 
     echo ""
+    echo "Available OpenAI Models (via -c model=X):"
+    echo "  ────────────────────────────────────────────────────────────────"
+    echo "  gpt-5.1-codex-max    Default, best for agentic coding (77.9% SWE)"
+    echo "  gpt-5.1-codex-mini   Fast, cheap Q&A (\$0.25/1M input)"
+    echo "  gpt-5.1              General purpose coding"
+    echo "  o3                   Deep reasoning (slow but thorough)"
+    echo "  o4-mini              Fast reasoning, great for math (99.5% AIME)"
+    echo ""
     echo "Usage:"
     echo "  aria route code \"implement user authentication\""
     echo "  aria route fast \"fix this typo\""
     echo "  aria route reason \"debug this complex issue\""
     echo "  aria route context \"analyze the entire codebase\""
+    echo ""
+    echo "Direct Codex Usage (non-interactive):"
+    echo "  codex exec \"prompt\"                    # Use default model"
+    echo "  codex -c model=o4-mini exec \"prompt\"   # Use specific model"
+    echo ""
+    echo "Note: Interactive commands like /model require a terminal."
+    echo "      For scripts, use -c model=X flag instead."
     echo ""
 }
 
