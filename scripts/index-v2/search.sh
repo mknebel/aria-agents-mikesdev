@@ -19,6 +19,10 @@ PROJECT_ROOT=$(cd "$PROJECT_ROOT" 2>/dev/null && pwd)
 
 [[ -z "$QUERY" ]] && echo "Usage: search.sh \"query\" [path]" && exit 1
 
+# Source cache library
+ARIA_DIR="$HOME/.claude/scripts"
+[[ -f "$ARIA_DIR/aria-cache.sh" ]] && source "$ARIA_DIR/aria-cache.sh" || true
+
 # Find index
 INDEX_NAME=$(echo "$PROJECT_ROOT" | md5sum | cut -d' ' -f1)
 INDEX_DIR="$HOME/.claude/indexes/$INDEX_NAME"
@@ -34,6 +38,22 @@ mkdir -p "$VAR_DIR"
 echo "🔍 Index V2 Search" >&2
 echo "📋 Query: $QUERY" >&2
 echo "" >&2
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CHECK CACHE FIRST
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+if type aria_cache_query_get &>/dev/null; then
+    echo "━━━ Step 0: Cache Check ━━━" >&2
+    CACHED=$(aria_cache_query_get "$QUERY" 2>/dev/null || echo "")
+    if [[ -n "$CACHED" ]]; then
+        echo "⚡ Cache HIT" >&2
+        echo "$CACHED"
+        exit 0
+    fi
+    echo "Cache MISS" >&2
+    echo "" >&2
+fi
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # CHECK INDEX EXISTS
@@ -258,6 +278,11 @@ done <<< "$RANKED"
 # Save results
 echo "$OUTPUT" > "$VAR_DIR/search_last"
 echo "$OUTPUT" > "$VAR_DIR/indexed_search_last"
+
+# Cache results
+if type aria_cache_query_set &>/dev/null; then
+    aria_cache_query_set "$QUERY" "$OUTPUT" 2>/dev/null || true
+fi
 
 echo "" >&2
 echo "✅ Done | \$indexed_search_last" >&2

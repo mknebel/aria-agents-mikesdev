@@ -12,6 +12,7 @@ TOOL=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 ARIA_DIR="$HOME/.claude/scripts"
 [[ -f "$ARIA_DIR/aria-state.sh" ]] && source "$ARIA_DIR/aria-state.sh"
 [[ -f "$ARIA_DIR/aria-block.sh" ]] && source "$ARIA_DIR/aria-block.sh"
+[[ -f "$ARIA_DIR/aria-cache.sh" ]] && source "$ARIA_DIR/aria-cache.sh"
 
 # Extract target from tool input
 TARGET=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.path // .tool_input.pattern // empty' 2>/dev/null)
@@ -32,7 +33,15 @@ output_block() {
 
 case "$TOOL" in
     Read)
-        # Check if indexed/cached answer exists first
+        # Check if file cache is valid (aria-cache.sh)
+        if type aria_cache_file_valid &>/dev/null && [[ -n "$TARGET" ]]; then
+            if aria_cache_file_valid "$TARGET" 2>/dev/null; then
+                aria_inc "cache_hits" 2>/dev/null
+                output_status "⚡ File cache valid: $(basename "$TARGET")"
+            fi
+        fi
+
+        # Check if indexed/cached answer exists (search cache fallback)
         CACHE_DIR="$HOME/.claude/cache/search-cache"
         if [[ -d "$CACHE_DIR" && -n "$TARGET" ]]; then
             # Check if file is in recent search results (already have context)
@@ -84,6 +93,10 @@ case "$TOOL" in
         aria_inc "greps" 2>/dev/null
         aria_inc "tool_calls" 2>/dev/null
         aria_inc "tool_success" 2>/dev/null
+
+        # Note: Search results caching (aria_cache_search_set) happens in post-tool hook
+        # or via external tools (ctx, gemini) that handle their own caching
+
         output_status "✓ Using Grep (ripgrep)"
         ;;
 

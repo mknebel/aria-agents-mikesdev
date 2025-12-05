@@ -4,27 +4,67 @@
 
 You MUST follow ARIA workflow for ALL tasks. This is not optional.
 
-## Cost Hierarchy (ENFORCED)
+## Cost Hierarchy (ENFORCED) - Updated Dec 2025
 ```
-1. FREE tools first   → ctx, gemini, codex-save.sh, quality-gate.sh
-2. Haiku for CLI      → git, winscp, composer, npm, lint, test
-3. Haiku subagents    → aria-coder, aria-qa, Explore
-4. Opus (UI/design)   → aria-ui-ux (Claude is LAST LINE for UI/UX)
-5. Opus (LAST RESORT) → aria-thinking (only for complex/failed)
+GPT-5.1 beats o3: 74.9% vs 69.1% SWE, 94.6% vs 88.9% AIME
+GPT-5.1 uses 50-80% fewer tokens than o-series!
+
+1. FREE              → gemini, ctx (1M+ context, analysis)
+2. ChatGPT Pro       → gpt-5.1 (general: 74.9% SWE, 94.6% AIME)
+3. ChatGPT Pro       → codex-max (complex code: 77.9% SWE)
+4. ChatGPT Pro       → o4-mini (explicit step-by-step, fast)
+5. ChatGPT Pro       → o3 (deep proofs, explicit reasoning)
+6. ChatGPT Pro       → o3-pro (only when everything fails)
+7. Claude Haiku      → File ops only (minimal tokens)
+8. Claude Opus       → UI/UX only (LAST RESORT)
+```
+
+## Model Routing (GPT-5.1 First)
+```
+Context/Analysis    → gemini (FREE, 1M tokens)
+General Tasks       → gpt-5.1 (BEST: 74.9% SWE, 94.6% AIME)
+Code Generation     → codex-max (77.9% SWE-bench)
+Math/Calculations   → gpt-5.1 (94.6% AIME, better than o-series)
+Explicit Reasoning  → o4-mini/o3 (step-by-step proofs)
+Complex/Failed      → o3-pro (most reliable)
+File Operations     → Claude Haiku (minimal)
+UI/UX Design        → Claude Opus (last line)
 ```
 
 ## Claude's Role (ENFORCED)
-- **DO**: Orchestrate, delegate, consolidate results
+- **DO**: Orchestrate, delegate, REVIEW generated code, consolidate results
+- **DO**: Check consistency, completeness, themes, security, patterns
 - **DON'T**: Generate code inline, analyze large files, do heavy reasoning
 - **NEVER**: Skip external tools, generate >3 lines of code directly
 
+## Code Review (Claude's Primary Value)
+After external tools generate code, Claude MUST review for:
+```
+□ Consistency with existing codebase patterns
+□ Complete implementation (nothing missed)
+□ Theme/style adherence (Bootstrap, Porto Admin, etc.)
+□ Security (no injection, XSS, SQL injection)
+□ Error handling and edge cases
+□ Database patterns (soft deletes, multi-tenant)
+□ No breaking changes
+```
+
 ## Mandatory Routing
 
-### Code Tasks
+### Code Tasks (Generate → Review → Apply)
 ```
-Simple (1-2 files)  → FREE tools only → quality-gate.sh
-Medium (3+ files)   → /plan first → aria-coder (haiku) → quality-gate.sh
-Complex             → /plan → parallel haiku agents → quality-gate.sh
+1. Context    → gemini/ctx (FREE)
+2. Generate   → codex-mini/codex/codex-max (Pro flat)
+3. Review     → Claude Opus (check consistency, completeness, themes)
+4. Apply      → codex-mini or Haiku (if approved)
+5. Validate   → quality-gate.sh (FREE)
+```
+
+### Task Complexity
+```
+Simple (1-2 files)  → codex-mini generate → Claude review → apply
+Medium (3+ files)   → /plan → codex generate → Claude review → apply
+Complex             → /plan → codex-max → Claude review → parallel apply
 ```
 
 ### UI/Design Tasks
@@ -52,9 +92,12 @@ git, winscp, composer, npm, lint, test → Task(aria-admin, haiku)
 
 | Task | MUST Use | NEVER |
 |------|----------|-------|
-| Context | `ctx` or `gemini @.` | Multiple Reads |
-| Code gen >3 lines | `codex-save.sh` | Inline generation |
-| Analysis | `ai.sh fast` | Full Claude analysis |
+| Context | `ctx` or `gemini` (FREE) | Multiple Reads |
+| General tasks | `aria route general` (gpt-5.1) | Claude thinking |
+| Code gen >3 lines | `aria route code` (codex-max) | Inline generation |
+| Math | `aria route math` (gpt-5.1, 94.6%) | Claude calculation |
+| Explicit proofs | `aria route reason` (o3) | When gpt-5.1 works |
+| Complex/failed | `aria route deep` (o3-pro) | First attempt |
 | Planning | `/plan` | Manual planning |
 | Quality | `quality-gate.sh` | Skipping validation |
 
@@ -66,6 +109,8 @@ git, winscp, composer, npm, lint, test → Task(aria-admin, haiku)
 4. **Parallel execution**: Launch independent agents in single message
 5. **Quality gate**: EVERY implementation ends with quality-gate.sh
 6. **Claude = orchestrator**: Delegate, don't implement
+7. **NO AUTO-COMMIT**: NEVER commit unless user explicitly requests it
+8. **NO AUTO-PUSH**: NEVER push unless user explicitly requests it
 
 ## Violation Examples
 
@@ -74,11 +119,14 @@ git, winscp, composer, npm, lint, test → Task(aria-admin, haiku)
 ❌ **WRONG**: Running `git commit` directly instead of via haiku agent
 ❌ **WRONG**: Skipping `/plan` for multi-file changes
 ❌ **WRONG**: Creating UI without running `/design` pipeline
+❌ **WRONG**: Auto-committing after making changes
+❌ **WRONG**: Pushing to remote without explicit user request
 
-✅ **RIGHT**: `ctx "find auth files"` → review summary → delegate to agent
-✅ **RIGHT**: `/plan "implement feature"` → review → `/apply`
-✅ **RIGHT**: `/design "new dashboard"` → drafts → Claude refines
-✅ **RIGHT**: `Task(aria-admin, haiku, "git commit...")` for CLI
+✅ **RIGHT**: `ctx "find auth files"` → review summary → delegate
+✅ **RIGHT**: `aria route code "implement feature"` → codex-max generates
+✅ **RIGHT**: `aria route reason "debug issue"` → o3 analyzes
+✅ **RIGHT**: `/design "new dashboard"` → drafts → Claude Opus refines
+✅ **RIGHT**: `Task(aria-admin, haiku, "git commit...")` for file ops
 
 ## Session Behavior
 
