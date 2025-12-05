@@ -38,16 +38,17 @@ Be specific and production-ready."
 # Run all 3 in parallel using background processes
 echo "▶ Running 4 LLMs in parallel..."
 echo "  - Claude Opus 4.5 (aria-ui-ux agent) - launched by Claude after"
-echo "  - Gemini (latest) - FREE"
+echo "  - Gemini 3 (latest, FREE) - 1M+ context"
 echo "  - ChatGPT gpt-5.1 (fast reasoning) - Pro subscription"
 echo "  - Codex gpt-5.1-codex-max (agentic) - Pro subscription"
 echo ""
 
-# Gemini (background) - FREE
-echo "  Starting Gemini..."
+# Gemini 3 (background) - FREE with massive context
+echo "  Starting Gemini 3..."
 (
     if command -v gemini &> /dev/null; then
         cd "$SEARCH_PATH"
+        # Use Gemini 3 with full codebase context
         gemini "$DESIGN_PROMPT" @. 2>/dev/null > "$VAR_DIR/gemini_design" || echo "Gemini failed" > "$VAR_DIR/gemini_design"
         cd - > /dev/null
     else
@@ -97,7 +98,7 @@ echo "════════════════════════�
 cat > "$VAR_DIR/design_comparison" << COMPARISON
 # Design Comparison: $TASK
 
-## Gemini Design (FREE)
+## Gemini 3 Design (FREE, 1M+ context)
 $(cat "$VAR_DIR/gemini_design")
 
 ---

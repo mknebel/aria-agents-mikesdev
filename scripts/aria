@@ -1,0 +1,148 @@
+#!/bin/bash
+# ARIA CLI - Token Optimizer Command Interface
+# Gemini-style reporting with model routing
+
+ARIA_DIR="$HOME/.claude"
+ARIA_SCRIPTS="$ARIA_DIR/scripts"
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+WHITE='\033[1;37m'
+DIM='\033[2m'
+RESET='\033[0m'
+
+show_banner() {
+    echo -e "${CYAN}"
+    cat << 'EOF'
+    ___    ____  _____    ___
+   /   |  / __ \/  _/   /   |
+  / /| | / /_/ // /    / /| |
+ / ___ |/ _, _// /    / ___ |
+/_/  |_/_/ |_/___/   /_/  |_|
+
+Token Optimizer v2.0
+EOF
+    echo -e "${RESET}"
+}
+
+show_help() {
+    echo ""
+    echo -e "${WHITE}ARIA Token Optimizer${RESET}"
+    echo ""
+    echo "Usage: aria <command> [options]"
+    echo ""
+    echo -e "${WHITE}Session Commands:${RESET}"
+    echo "  score, s          Show efficiency score (Gemini-style)"
+    echo "  compact, c        Show compact one-line score"
+    echo "  status, st        Show raw session state"
+    echo "  reset, r          Reset session counters"
+    echo ""
+    echo -e "${WHITE}Blocking Commands:${RESET}"
+    echo "  override, o       Bypass blocking for 1 hour"
+    echo "  override clear    Clear the override"
+    echo ""
+    echo -e "${WHITE}Model Routing:${RESET}"
+    echo "  route <type> <prompt>   Route to optimal model"
+    echo "  models, m               Show model routing table"
+    echo "  gemini <prompt>         Direct Gemini query (FREE)"
+    echo ""
+    echo -e "${WHITE}Task Types for Routing:${RESET}"
+    echo "  quick    - Fast Q&A (codex-mini)"
+    echo "  code     - Code generation (codex-max)"
+    echo "  reason   - Deep reasoning (o3)"
+    echo "  fast     - Quick tasks (o4-mini)"
+    echo "  refactor - Multi-file changes (codex-max)"
+    echo "  math     - Algorithms (o4-mini)"
+    echo "  context  - Large context (gemini FREE)"
+    echo ""
+    echo -e "${WHITE}Examples:${RESET}"
+    echo "  aria score                          # Show session summary"
+    echo "  aria route code 'implement auth'    # Use codex-max"
+    echo "  aria route fast 'fix typo'          # Use o4-mini"
+    echo "  aria gemini 'analyze codebase' @.   # Use Gemini FREE"
+    echo "  aria override                       # Bypass blocking 1hr"
+    echo ""
+}
+
+case "${1:-help}" in
+    score|s)
+        source "$ARIA_SCRIPTS/aria-score.sh" 2>/dev/null
+        aria_show_summary
+        ;;
+
+    compact|c)
+        source "$ARIA_SCRIPTS/aria-score.sh" 2>/dev/null
+        aria_show_compact
+        ;;
+
+    status|st)
+        if [[ -f "$ARIA_DIR/.aria-state" ]]; then
+            jq . "$ARIA_DIR/.aria-state"
+        else
+            echo "No session state found"
+        fi
+        ;;
+
+    reset|r)
+        source "$ARIA_SCRIPTS/aria-state.sh" 2>/dev/null
+        aria_init
+        echo -e "${GREEN}Session reset${RESET}"
+        ;;
+
+    override|o)
+        source "$ARIA_SCRIPTS/aria-block.sh" 2>/dev/null
+        case "$2" in
+            clear|c)
+                aria_clear_override
+                ;;
+            status|s)
+                if aria_override_active; then
+                    echo "Override: ACTIVE"
+                else
+                    echo "Override: inactive"
+                fi
+                ;;
+            *)
+                aria_set_override
+                ;;
+        esac
+        ;;
+
+    route)
+        shift
+        source "$ARIA_SCRIPTS/aria-route.sh" 2>/dev/null
+        aria_route "$@"
+        ;;
+
+    models|m)
+        source "$ARIA_SCRIPTS/aria-route.sh" 2>/dev/null
+        aria_show_models
+        ;;
+
+    gemini|g)
+        shift
+        source "$ARIA_SCRIPTS/aria-route.sh" 2>/dev/null
+        aria_gemini "$@"
+        ;;
+
+    banner|b)
+        show_banner
+        ;;
+
+    help|h|--help|-h)
+        show_banner
+        show_help
+        ;;
+
+    *)
+        # Check if it's a task type for routing
+        if [[ "$1" =~ ^(quick|code|reason|fast|refactor|math|context)$ ]]; then
+            source "$ARIA_SCRIPTS/aria-route.sh" 2>/dev/null
+            aria_route "$@"
+        else
+            show_help
+        fi
+        ;;
+esac
