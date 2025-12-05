@@ -1,0 +1,3 @@
+#!/bin/bash
+# Variable manager wrapper
+exec ~/.claude/scripts/var.sh "$@"

@@ -1,0 +1,3 @@
+#!/bin/bash
+# Context builder wrapper
+exec ~/.claude/scripts/ctx.sh "$@"

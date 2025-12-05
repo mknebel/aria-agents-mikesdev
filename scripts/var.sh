@@ -41,6 +41,7 @@ cmd_save() {
 
     local var_file="$VAR_DIR/${name}.txt"
     local meta_file="$VAR_DIR/${name}.meta"
+    local summary_file="$VAR_DIR/${name}.summary"
 
     # Read from stdin if content is -
     if [[ "$content" == "-" ]]; then
@@ -65,8 +66,45 @@ cmd_save() {
         size_fmt="${size}B"
     fi
 
+    # AUTO-GENERATE SUMMARY (for efficient inter-agent communication)
+    {
+        echo "var: \$${name}"
+        echo "size: ${size_fmt} (${lines} lines)"
+        [[ -n "$query" ]] && echo "query: ${query}"
+        echo "---"
+        head -c 500 "$var_file" 2>/dev/null || true
+        [[ $size -gt 500 ]] && echo -e "\n... [${size_fmt} total]"
+    } > "$summary_file"
+
     echo -e "${GREEN}✓${NC} Saved \$${name} (${size_fmt}, ${lines} lines)" >&2
     echo "@var:${name}"
+}
+
+# Get summary only (for efficient inter-agent communication)
+cmd_summary() {
+    local name="$1"
+    [[ -z "$name" ]] && echo "Usage: var summary <name>" >&2 && exit 1
+
+    local summary_file="$VAR_DIR/${name}.summary"
+    local var_file="$VAR_DIR/${name}.txt"
+
+    if [[ -f "$summary_file" ]]; then
+        cat "$summary_file"
+    elif [[ -f "$var_file" ]]; then
+        # Generate on-the-fly if missing
+        local size=$(wc -c < "$var_file")
+        local lines=$(wc -l < "$var_file")
+        local size_fmt="${size}B"
+        [[ $size -gt 1024 ]] && size_fmt="$(echo "scale=1; $size/1024" | bc)KB"
+        echo "var: \$${name}"
+        echo "size: ${size_fmt} (${lines} lines)"
+        echo "---"
+        head -c 500 "$var_file"
+        [[ $size -gt 500 ]] && echo -e "\n... [truncated]"
+    else
+        echo "Variable not found: $name" >&2
+        exit 1
+    fi
 }
 
 cmd_get() {
@@ -201,7 +239,7 @@ cmd_list() {
 }
 
 cmd_clear() {
-    rm -f "$VAR_DIR"/*.txt "$VAR_DIR"/*.meta 2>/dev/null || true
+    rm -f "$VAR_DIR"/*.txt "$VAR_DIR"/*.meta "$VAR_DIR"/*.summary 2>/dev/null || true
     echo -e "${GREEN}✓${NC} Cleared all session variables"
 }
 
@@ -254,6 +292,7 @@ cmd_resolve() {
 case "${1:-}" in
     save) shift; cmd_save "$@" ;;
     get) shift; cmd_get "$@" ;;
+    summary) shift; cmd_summary "$@" ;;
     path) shift; cmd_path "$@" ;;
     fresh) shift; cmd_fresh "$@" ;;
     list) cmd_list ;;
@@ -268,14 +307,21 @@ Usage:
   var get <name>                Get variable content
   var get <name> --head N       Get first N lines
   var get <name> --meta         Get metadata only
+  var summary <name>            Get summary only (500 chars, for agents)
   var path <name>               Get file path
   var fresh <name> [minutes]    Check if fresh (exit 0=fresh, 1=stale)
   var list                      List all variables
   var clear                     Clear all variables
   var resolve "text" [llm]      Resolve @var: references for LLM type
 
+Inter-Agent Communication:
+  - save auto-generates .summary file (500 char preview)
+  - Agents should read summary first, full content only if needed
+  - Pass @var:name references, not inline data
+
 Examples:
   echo "search results" | var save ctx_last -
+  var summary ctx_last           # Quick preview for agents
   var get ctx_last --head 10
   var fresh ctx_last 5 && echo "still fresh"
   var resolve "analyze @var:ctx_last" codex

@@ -1,4 +1,28 @@
 {
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Grep|Read|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/mike/.claude/hooks/pre-tool-handler.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Grep|Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/mike/.claude/hooks/post-tool-handler.sh"
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "frontend-design@claude-code-plugins": true
   },

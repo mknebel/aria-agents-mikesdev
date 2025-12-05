@@ -7,41 +7,17 @@ tools: [Bash, Read, Write]
 
 # Browser Testing Agent
 
-Runs Playwright tests using `browser.sh` wrapper.
+## Commands
+| Action | Command |
+|--------|---------|
+| Status | `browser.sh status` |
+| Navigate | `browser.sh url "http://localhost/app"` |
+| Visible | `browser.sh visible url "URL"` |
+| Test | `browser.sh test tests/e2e/file.spec.js` |
+| Screenshot | `browser.sh screenshot "URL" /tmp/out.png` |
 
-## Usage
-
-```bash
-# Check mode
-browser.sh status
-
-# Navigate and get HTML
-browser.sh url "http://localhost/app"
-
-# With visible browser
-browser.sh visible url "http://localhost/app"
-
-# Run test file
-browser.sh test tests/e2e/login.spec.js
-
-# Screenshot
-browser.sh screenshot "http://localhost/app" /tmp/test.png
-```
-
-## Mode Toggle
-
-```bash
-browser.sh headless   # Fast, no window (default)
-browser.sh visible    # See the browser
-```
+## Mode
+`browser.sh headless` (default) | `browser.sh visible`
 
 ## Output
-
-All output saved to `/tmp/claude_vars/browser_last` for pass-by-reference.
-
-## When to Use
-
-- Verify UI changes
-- Run e2e tests
-- Take screenshots
-- Debug with visible browser
+Saved to `/tmp/claude_vars/browser_last`

@@ -83,12 +83,17 @@ case "$TOOL" in
         call_openrouter "@preset/browser-agent-tools-only" "$PROMPT" "🌐 Browser preset..."
         ;;
 
+    apply|merge|patch)
+        # Ultra-fast code application via Relace Apply 3
+        call_openrouter "relace/relace-apply-3" "$PROMPT" "⚡ Relace Apply (code merge)..."
+        ;;
+
     agent|browser-agent)
         # Full agentic browser automation with persistent session
         ~/.claude/scripts/browser-agent.sh "$PROMPT"
         ;;
 
-    tools|explore)
+    explore)
         # Tools agent - LLM with search/read/list tools
         ~/.claude/scripts/tools-agent.sh "$PROMPT"
         ;;
@@ -120,17 +125,18 @@ AI Tool - Unified Interface
 Usage: ai.sh <tool> "prompt"
 
 Free (your subscriptions):
-  codex   - GPT-4 (your OpenAI account)
-  gemini  - Gemini (your Google account)
+  codex   - GPT-4+ (your OpenAI account) - code generation
+  gemini  - Gemini (your Google account) - analysis/reasoning
 
-OpenRouter:
-  fast    - DeepSeek (cheapest, fastest)
-  qa      - QA/Doc preset (test logs, docs)
-  tools   - Qwen Coder (implementation)
-  browser - DeepSeek (UI automation prompts)
+OpenRouter (cheap):
+  fast    - Super-fast preset (~$0.001) - quick checks
+  qa      - QA/Doc preset (~$0.002) - reviews
+  tools   - Tool-use preset (~$0.001) - code generation
+  apply   - Relace Apply 3 (~$0.001) - code merging ⚡
+  browser - Browser preset (~$0.02) - UI automation
 
 Agents:
-  tools   - Code explorer (search/read/list tools)
+  explore - Code explorer (search/read tools)
   search  - Search codebase + analyze
   agent   - Browser automation
 

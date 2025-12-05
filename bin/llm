@@ -1,0 +1,3 @@
+#!/bin/bash
+# LLM dispatcher wrapper
+exec ~/.claude/scripts/llm.sh "$@"

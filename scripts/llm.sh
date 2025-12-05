@@ -51,10 +51,17 @@ Providers:
   tools    Tool-use preset (inlines content)
   qa       QA/Doc preset (inlines content)
 
-Auto-selection logic (by PURPOSE):
-  implement/write/create → codex (best code generation)
-  review/check/analyze   → qa (optimized for analysis)
-  explain/summarize      → fast (speed priority)
+Auto-selection logic (PURPOSE + SIZE):
+  implement/write/create:
+    - small (<5KB) → tools (OpenRouter)
+    - large → codex (best quality)
+  review/check/analyze:
+    - small (<5KB) → fast (super-fast)
+    - medium (<20KB) → qa preset
+    - large → codex (file reader)
+  explain/summarize:
+    - small/no context → fast (super-fast)
+    - large context → codex
   browser/click/navigate → browser preset
 
 Variable References:
@@ -192,31 +199,40 @@ detect_intent() {
     echo "code"
 }
 
-# Auto-select best LLM based on PURPOSE (not size)
-# Priority: intent > @var: presence > size fallback
+# Auto-select best LLM based on PURPOSE + SIZE
+# Priority: FREE models (codex/gemini) > cheap OpenRouter > expensive
+# OPTIMIZATION: Maximize FREE usage, OpenRouter only for quick checks
 auto_select_llm() {
     local prompt="$1"
     local intent=$(detect_intent "$prompt")
     local has_var_refs=$(echo "$prompt" | grep -c '@var:' || echo 0)
     local size=$(get_context_size "$prompt")
 
+    # Size thresholds (bytes)
+    local SMALL_CTX=5120      # 5KB - can inline to fast
+    local MEDIUM_CTX=20480    # 20KB - OpenRouter max
+
     case "$intent" in
         code)
-            # Code tasks → codex (best generation quality)
-            echo -e "${CYAN}🎯 Intent: code → codex${NC}" >&2
+            # Code generation → ALWAYS codex (FREE, best quality)
+            echo -e "${CYAN}🎯 Intent: code → codex (FREE)${NC}" >&2
             echo "codex"
             ;;
         review)
-            # Review tasks → qa preset (optimized for analysis)
-            echo -e "${CYAN}🎯 Intent: review → qa${NC}" >&2
-            echo "qa"
+            # Review → gemini for thorough, fast for quick checks
+            if [[ $size -lt $SMALL_CTX && $has_var_refs -eq 0 ]]; then
+                echo -e "${CYAN}🎯 Intent: review (quick) → fast${NC}" >&2
+                echo "fast"
+            else
+                echo -e "${CYAN}🎯 Intent: review → gemini (FREE)${NC}" >&2
+                echo "gemini"
+            fi
             ;;
         quick)
-            # Quick questions → fast (speed priority)
-            if [[ $has_var_refs -gt 0 ]]; then
-                # But codex if @var: refs (needs file access)
-                echo -e "${CYAN}🎯 Intent: quick + @var: → codex${NC}" >&2
-                echo "codex"
+            # Quick questions → fast for tiny, gemini for context
+            if [[ $has_var_refs -gt 0 || $size -gt 0 ]]; then
+                echo -e "${CYAN}🎯 Intent: quick + context → gemini (FREE)${NC}" >&2
+                echo "gemini"
             else
                 echo -e "${CYAN}🎯 Intent: quick → fast${NC}" >&2
                 echo "fast"
@@ -227,11 +243,13 @@ auto_select_llm() {
             echo "browser"
             ;;
         *)
-            # Fallback: codex for @var: refs, fast otherwise
+            # Default: FREE models based on task type
             if [[ $has_var_refs -gt 0 ]]; then
-                echo -e "${CYAN}🎯 Default + @var: → codex${NC}" >&2
+                # Has context → codex (FREE, can read files)
+                echo -e "${CYAN}🎯 Default + context → codex (FREE)${NC}" >&2
                 echo "codex"
             else
+                # No context → fast (cheapest)
                 echo -e "${CYAN}🎯 Default → fast${NC}" >&2
                 echo "fast"
             fi
@@ -266,7 +284,7 @@ check_health() {
         gemini)
             timeout 2 gemini "hi" >/dev/null 2>&1 || healthy="no"
             ;;
-        fast|tools|qa|browser)
+        fast|tools|qa|browser|apply)
             timeout 2 "$SCRIPTS_DIR/ai.sh" fast "hi" >/dev/null 2>&1 || healthy="no"
             ;;
     esac
@@ -279,11 +297,12 @@ check_health() {
 get_fallback() {
     local provider="$1"
     case "$provider" in
-        codex) echo "fast gemini" ;;
+        codex) echo "gemini fast" ;;
         gemini) echo "codex fast" ;;
         fast|tools|qa) echo "codex gemini" ;;
         browser) echo "fast codex" ;;
-        *) echo "fast" ;;
+        apply) echo "tools codex" ;;
+        *) echo "codex gemini" ;;
     esac
 }
 
@@ -337,6 +356,10 @@ call_provider() {
             resolved=$(resolve_for_llm "$prompt" "openrouter")
             "$SCRIPTS_DIR/ai.sh" browser "$resolved" 2>/dev/null
             ;;
+        apply)
+            resolved=$(resolve_for_llm "$prompt" "openrouter")
+            "$SCRIPTS_DIR/ai.sh" apply "$resolved" 2>/dev/null
+            ;;
     esac
 }
 
@@ -358,6 +381,7 @@ dispatch() {
         t|code) provider="tools" ;;
         doc|review) provider="qa" ;;
         ui) provider="browser" ;;
+        merge|patch) provider="apply" ;;
     esac
 
     # Build provider chain: primary + fallbacks
@@ -399,72 +423,28 @@ dispatch() {
     echo "$response"
 }
 
-# Generate cache key from provider + prompt + var contents
-get_cache_key() {
-    local provider="$1"
-    local prompt="$2"
-
-    # Build hash input: provider + prompt + var file hashes
-    local hash_input="$provider|$prompt"
-
-    local vars=$(echo "$prompt" | grep -oE '@var:[a-zA-Z0-9_]+' || true)
-    for ref in $vars; do
-        local var_name="${ref#@var:}"
-        local var_file="$VAR_DIR/${var_name}.txt"
-        if [[ -f "$var_file" ]]; then
-            hash_input+="|$(md5sum "$var_file" | cut -d' ' -f1)"
-        fi
-    done
-
-    echo "$hash_input" | md5sum | cut -d' ' -f1
-}
-
-# Check cache (returns 0 if hit, 1 if miss)
-check_cache() {
-    local cache_key="$1"
-    local cache_file="$CACHE_DIR/${cache_key}.txt"
-    local cache_meta="$CACHE_DIR/${cache_key}.meta"
-
-    [[ ! -f "$cache_file" ]] && return 1
-    [[ ! -f "$cache_meta" ]] && return 1
-
-    # Check freshness (1 hour max)
-    local cache_age=$(( $(date +%s) - $(stat -c %Y "$cache_file") ))
-    if [[ $cache_age -gt 3600 ]]; then
-        return 1
-    fi
-
-    echo -e "${GREEN}⚡ Cache hit (${cache_age}s old)${NC}" >&2
-    cat "$cache_file"
-    return 0
-}
-
-# Save to cache
-save_cache() {
-    local cache_key="$1"
-    local response="$2"
-    local provider="$3"
-    local prompt="$4"
-
-    local cache_file="$CACHE_DIR/${cache_key}.txt"
-    local cache_meta="$CACHE_DIR/${cache_key}.meta"
-
-    echo "$response" > "$cache_file"
-    echo "${provider}|${prompt:0:100}" > "$cache_meta"
-}
+# Use enhanced cache manager
+CACHE_SCRIPT="$SCRIPTS_DIR/cache-manager.sh"
 
 # Main execution
 check_freshness "$PROMPT"
 
-# Check cache first
-CACHE_KEY=$(get_cache_key "$PROVIDER" "$PROMPT")
-if RESPONSE=$(check_cache "$CACHE_KEY"); then
-    # Cache hit - response already set
-    :
+# Handle auto mode resolution for caching
+RESOLVED_PROVIDER="$PROVIDER"
+if [[ "$PROVIDER" == "auto" || "$PROVIDER" == "a" ]]; then
+    RESOLVED_PROVIDER=$(auto_select_llm "$PROMPT")
+fi
+
+# Check enhanced cache first
+if RESPONSE=$("$CACHE_SCRIPT" get "$RESOLVED_PROVIDER" "$PROMPT" 2>&1); then
+    # Cache hit - response already set (filter out status message)
+    RESPONSE=$(echo "$RESPONSE" | grep -v "^⚡ Cache hit" || echo "$RESPONSE")
 else
     # Cache miss - call LLM
     RESPONSE=$(dispatch "$PROVIDER" "$PROMPT")
-    save_cache "$CACHE_KEY" "$RESPONSE" "$PROVIDER" "$PROMPT"
+
+    # Save to enhanced cache
+    "$CACHE_SCRIPT" set "$RESOLVED_PROVIDER" "$PROMPT" "$RESPONSE"
 fi
 
 # Save response

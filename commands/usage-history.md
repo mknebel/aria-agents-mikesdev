@@ -1,42 +1,16 @@
 ---
-description: Show token usage history for past days
-allowed-tools: Bash
+description: Show token usage history
 ---
 
-Show token usage history:
-
 ```bash
-LOG_DIR="$HOME/.claude/logs/token-usage"
+DIR="$HOME/.claude/logs/token-usage"
+[[ ! -d "$DIR" ]] && { echo "No history."; exit 0; }
 
-echo "=== Usage History ==="
-echo ""
-
-if [ ! -d "$LOG_DIR" ] || [ -z "$(ls -A "$LOG_DIR" 2>/dev/null)" ]; then
-    echo "No usage history found."
-    exit 0
-fi
-
-# Show last 7 days
-for f in $(ls -t "$LOG_DIR"/*.jsonl 2>/dev/null | head -7); do
-    DATE=$(basename "$f" .jsonl)
-    CALLS=$(jq -s 'length' "$f" 2>/dev/null)
-    TOTAL_IN=$(jq -s 'map(.input_chars) | add' "$f" 2>/dev/null)
-    TOTAL_OUT=$(jq -s 'map(.output_chars) | add' "$f" 2>/dev/null)
-
-    TOKENS=$((($TOTAL_IN + $TOTAL_OUT) / 4))
-
-    if command -v bc &> /dev/null; then
-        COST=$(echo "scale=4; ($TOTAL_IN/4 * 0.000015) + ($TOTAL_OUT/4 * 0.000075)" | bc)
-        echo "$DATE: $CALLS calls, ~$TOKENS tokens, ~\$$COST"
-    else
-        echo "$DATE: $CALLS calls, ~$TOKENS tokens"
-    fi
+echo "=== Last 7 Days ==="
+for f in $(ls -t "$DIR"/*.jsonl 2>/dev/null | head -7); do
+    D=$(basename "$f" .jsonl)
+    C=$(jq -s 'length' "$f")
+    T=$(jq -s 'map(.input_chars+.output_chars)|add//0' "$f")
+    echo "$D: $C calls, ~$((T/4)) tokens"
 done
-
-echo ""
-echo "=== Total (all time) ==="
-TOTAL_CALLS=$(cat "$LOG_DIR"/*.jsonl 2>/dev/null | jq -s 'length')
-TOTAL_CHARS=$(cat "$LOG_DIR"/*.jsonl 2>/dev/null | jq -s 'map(.input_chars + .output_chars) | add')
-echo "Total calls: $TOTAL_CALLS"
-echo "Total chars: $TOTAL_CHARS (~$((TOTAL_CHARS / 4)) tokens)"
 ```
