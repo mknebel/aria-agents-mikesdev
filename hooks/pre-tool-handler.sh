@@ -1,80 +1,66 @@
 #!/bin/bash
-# Pre-tool hook for Fast Mode enforcement
-# Tracks tool usage patterns and provides reminders about optimal workflows
+# Pre-tool hook - Shows mode status and enforces external-first
+# Outputs visible status that Claude sees in tool response
 
 MODE=$(cat "$HOME/.claude/routing-mode" 2>/dev/null || echo "fast")
-[ "$MODE" != "fast" ] && exit 0
-
 INPUT=$(cat) || exit 0
 command -v jq >/dev/null || exit 0
 
 TOOL=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 [ -z "$TOOL" ] && exit 0
 
-LOG="$HOME/.claude/fast-reminders.log"
 STATE_FILE="$HOME/.claude/.session-state"
+[ ! -f "$STATE_FILE" ] && echo '{"ctx_used":false,"files_read":0,"gen_count":0}' > "$STATE_FILE"
 
-# Initialize session state if needed
-[ ! -f "$STATE_FILE" ] && echo '{"index_used":false,"ctx_used":false,"files_read":0}' > "$STATE_FILE"
-
-# Read current state
-INDEX_USED=$(jq -r '.index_used // false' "$STATE_FILE" 2>/dev/null)
 CTX_USED=$(jq -r '.ctx_used // false' "$STATE_FILE" 2>/dev/null)
 FILES_READ=$(jq -r '.files_read // 0' "$STATE_FILE" 2>/dev/null)
+GEN_COUNT=$(jq -r '.gen_count // 0' "$STATE_FILE" 2>/dev/null)
+
+# Mode icons
+FAST_ICON="⚡"
+ARIA_ICON="🎭"
+MODE_ICON=$([[ "$MODE" == "fast" ]] && echo "$FAST_ICON" || echo "$ARIA_ICON")
+
+# Status output function - Claude sees this
+status_msg() {
+    echo "{\"status\":\"$1\",\"mode\":\"$MODE\",\"icon\":\"$MODE_ICON\"}"
+}
 
 case "$TOOL" in
     Grep)
-        if [ "$INDEX_USED" = "false" ] && [ "$CTX_USED" = "false" ]; then
-            echo "$(date +%H:%M:%S) ⚠️  Grep BEFORE index! Use: /lookup ClassName OR ctx \"query\" first" >> "$LOG"
-        else
-            echo "$(date +%H:%M:%S) ✓ Grep (after index/ctx)" >> "$LOG"
+        if [ "$CTX_USED" = "false" ]; then
+            status_msg "⚠️ Grep before ctx! Use: ctx query first"
         fi
         ;;
     Read)
         FILES_READ=$((FILES_READ + 1))
         jq ".files_read = $FILES_READ" "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
-
-        if [ "$FILES_READ" -gt 5 ] && [ "$CTX_USED" = "false" ]; then
-            echo "$(date +%H:%M:%S) ⚠️  $FILES_READ files read without ctx! Consider: ctx \"query\"" >> "$LOG"
-        else
-            echo "$(date +%H:%M:%S) 📖 Read ($FILES_READ files this session)" >> "$LOG"
+        if [ "$FILES_READ" -gt 3 ] && [ "$CTX_USED" = "false" ]; then
+            status_msg "⚠️ $FILES_READ reads without ctx. Consider: ctx query"
         fi
         ;;
     Task)
-        AGENT_TYPE=$(echo "$INPUT" | jq -r '.tool_input.subagent_type // empty' 2>/dev/null)
-        if [ "$AGENT_TYPE" = "Explore" ]; then
-            # Mark ctx as used when Explore agent is spawned
+        AGENT=$(echo "$INPUT" | jq -r '.tool_input.subagent_type // empty' 2>/dev/null)
+        if [ "$AGENT" = "Explore" ]; then
             jq '.ctx_used = true' "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
-            echo "$(date +%H:%M:%S) ✓ Explore agent - good for context gathering" >> "$LOG"
-        else
-            echo "$(date +%H:%M:%S) 🤖 Task agent: $AGENT_TYPE" >> "$LOG"
         fi
-        ;;
-    Edit|Write)
-        echo "$(date +%H:%M:%S) ✏️  $TOOL - applying changes" >> "$LOG"
+        status_msg "$ARIA_ICON $AGENT agent"
         ;;
     Bash)
-        # Check if using llm or ctx commands
         CMD=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
-        if [[ "$CMD" == *"ctx "* ]]; then
+        if [[ "$CMD" == *"ctx "* ]] || [[ "$CMD" == *"gemini "* ]]; then
             jq '.ctx_used = true' "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
-            echo "$(date +%H:%M:%S) ✓ ctx command used" >> "$LOG"
-        elif [[ "$CMD" == *"llm "* ]]; then
-            echo "$(date +%H:%M:%S) ✓ llm command - external generation" >> "$LOG"
-        elif [[ "$CMD" == *"/lookup"* ]] || [[ "$CMD" == *"jq"*"index"* ]]; then
-            jq '.index_used = true' "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
-            echo "$(date +%H:%M:%S) ✓ Project index lookup" >> "$LOG"
-        fi
-        ;;
-    SlashCommand)
-        CMD=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
-        if [[ "$CMD" == *"/lookup"* ]]; then
-            jq '.index_used = true' "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
-            echo "$(date +%H:%M:%S) ✓ /lookup used" >> "$LOG"
+            status_msg "✓ External context"
+        elif [[ "$CMD" == *"codex"* ]] || [[ "$CMD" == *"llm "* ]]; then
+            GEN_COUNT=$((GEN_COUNT + 1))
+            jq ".gen_count = $GEN_COUNT" "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
+            status_msg "✓ External generation"
+        elif [[ "$CMD" == *"plan-pipeline"* ]]; then
+            status_msg "$FAST_ICON Pipeline started"
+        elif [[ "$CMD" == *"quality-gate"* ]]; then
+            status_msg "🔍 Quality gate"
         fi
         ;;
 esac
 
-# Keep only last 30 lines
-tail -30 "$LOG" > "$LOG.tmp" 2>/dev/null && mv "$LOG.tmp" "$LOG"
 exit 0

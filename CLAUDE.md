@@ -5,13 +5,20 @@
 
 Complex/failed → aria-thinking (Opus) → Plan → Haiku implements.
 
-## Size Limits (Enforced)
-| Type | Max | Check |
-|------|-----|-------|
-| Agent | 35 | `~/.claude/hooks/check-size.sh` |
-| Command | 40 | auto |
+## External-First (Saves 85% tokens)
+| Task | Use | NOT |
+|------|-----|-----|
+| Context | `ctx "query"` or `gemini` | Multiple Reads |
+| Generate | `codex-save.sh` or `llm` | Direct output >10 lines |
+| Search | `ctx` then Read specific | Grep loops |
 
-**Rules**: No code >3 lines (use scripts/) | No ASCII diagrams | One line per rule
+**Auto-invoke**: >3 files or "implement/refactor/build" → `plan-pipeline.sh` first
+
+## Size Limits
+Agent ≤35 | Command ≤40 | Code >3 lines → scripts/
+
+## Cache
+`cached-read.sh` | `cached-structure.sh` | `cache-manager.sh stats`
 
 ## Docs
-Agents: ~/.claude/agents/ | Scripts: ~/.claude/scripts/ | Templates: ~/.claude/templates/
+Agents: ~/.claude/agents/ | Scripts: ~/.claude/scripts/
