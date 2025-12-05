@@ -32,6 +32,17 @@ output_block() {
 
 case "$TOOL" in
     Read)
+        # Check if indexed/cached answer exists first
+        CACHE_DIR="$HOME/.claude/cache/search-cache"
+        if [[ -d "$CACHE_DIR" && -n "$TARGET" ]]; then
+            # Check if file is in recent search results (already have context)
+            RECENT_CACHE=$(find "$CACHE_DIR" -name "*.txt" -mmin -30 -exec grep -l "$TARGET" {} \; 2>/dev/null | head -1)
+            if [[ -n "$RECENT_CACHE" ]]; then
+                aria_inc "cache_hits" 2>/dev/null
+                output_status "💡 File in recent search cache - consider using cached context"
+            fi
+        fi
+
         # Check blocking level
         if type aria_check &>/dev/null; then
             LEVEL=$(aria_check "Read" "$TARGET")
