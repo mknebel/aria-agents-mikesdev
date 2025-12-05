@@ -49,34 +49,43 @@ Use Claude Opus for UI work - better visual/UX reasoning.
 ```
 /design "component description"
     ↓
-┌─────────────────────────────────────────────────────┐
-│              PARALLEL DESIGN PLANNING               │
-├─────────────────┬─────────────────┬─────────────────┤
-│ Gemini          │ Codex           │ Claude Opus 4.5 │
-│ (latest)        │ (latest)        │ (aria-ui-ux)    │
-│ FREE            │ $               │ $$              │
-└────────┬────────┴────────┬────────┴────────┬────────┘
-         └────────────────┬┴─────────────────┘
-                          ↓
-              Compare/combine all 3 outputs
-                          ↓
-                   quality-gate.sh
+┌───────────────────────────────────────────────────────┐
+│           PHASE 1: PARALLEL DRAFTS                    │
+├───────────────┬───────────────┬───────────────────────┤
+│ Gemini        │ ChatGPT       │ Codex                 │
+│ (latest)      │ gpt-5.1       │ codex-max             │
+│ FREE          │ Pro sub       │ Pro sub               │
+└───────┬───────┴───────┬───────┴───────────┬───────────┘
+        └───────────────┴───────────────────┘
+                        ↓
+┌───────────────────────────────────────────────────────┐
+│     PHASE 2: CLAUDE OPUS - FINAL REFINEMENT           │
+│  • Reviews all 3 drafts                               │
+│  • Extracts best elements from each                   │
+│  • Applies superior UI/UX expertise                   │
+│  • Creates final, polished design                     │
+└───────────────────────────────────────────────────────┘
+                        ↓
+                 quality-gate.sh
 ```
 
 **Usage:** `/design "responsive dashboard with charts and filters"`
 
 **Flow:**
-1. Script runs Gemini + Codex in parallel
-2. Claude launches aria-ui-ux (Opus) for 3rd design
-3. Claude evaluates all 3 by category (structure, styling, a11y, code, UX)
-4. **Pick best OR merge best points** (no averaging, omit weak parts)
-5. Implement winning design
+1. Script runs Gemini + ChatGPT + Codex in parallel (3 drafts)
+2. Claude Opus (aria-ui-ux) reviews ALL drafts as input
+3. Claude extracts best elements, discards weak parts
+4. **Claude creates the FINAL refined design** (not just picking one)
+5. Implement Claude's refined design
 6. quality-gate.sh
 
+**Claude Opus is the LAST LINE - it improves upon all others.**
+
 **Variables created:**
-- `$gemini_design`: Gemini Pro design
-- `$codex_design`: Codex Max design
-- `$design_comparison`: Combined for review
+- `$gemini_design`: Gemini draft (FREE)
+- `$chatgpt_design`: ChatGPT gpt-5.1 draft (fast)
+- `$codex_design`: Codex gpt-5.1-codex-max draft (agentic)
+- `$design_comparison`: All drafts for Claude to refine
 
 ### Failed/Blocked
 ```
