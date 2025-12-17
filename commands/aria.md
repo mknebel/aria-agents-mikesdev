@@ -11,12 +11,19 @@ Claude = orchestrator. External tools + subagents do the work. **No exceptions.*
 
 ## Cost Hierarchy (STRICT)
 ```
-1. FREE tools first   → ctx, gemini, codex-save.sh, quality-gate.sh
-2. Haiku for CLI      → git, winscp, composer, npm, lint, test (deterministic)
-3. Haiku subagents    → aria-coder, aria-qa, Explore
-4. Opus (UI/design)   → aria-ui-ux (visual/UX needs quality)
-5. Opus (LAST RESORT) → aria-thinking (only for complex/failed tasks)
+1. FREE tools first   → just ctx/just q, ctx, gemini, codex-save.sh, quality-gate.sh
+2. Haiku for simple   → git commands, file operations (simple, clearly-defined tasks)
+3. Sonnet for coding  → aria-coder, aria-qa (implementation, testing, code review)
+4. Opus for planning  → system-architect, Explore, aria-thinking (planning, architecture, complex reasoning)
+5. Opus for UI/UX     → aria-ui-ux (visual/UX needs highest quality)
 ```
+
+**Prefer justfile commands when available** - `just ctx`, `just q`, `just lint`, `just test`, etc.
+
+**Model Selection Strategy:**
+- **Haiku**: Simple, mechanical tasks only (git status, file operations)
+- **Sonnet**: Implementation, coding, testing (balanced speed/quality/cost)
+- **Opus**: Planning, architecture, task definition, complex reasoning (highest quality strategic work)
 
 ## Claude's Role
 - **DO**: Orchestrate, delegate, consolidate results
@@ -26,26 +33,26 @@ Claude = orchestrator. External tools + subagents do the work. **No exceptions.*
 
 ### Simple (1-2 files, clear fix)
 ```
-FREE tools only → quality-gate.sh → done
+FREE tools only → just q → done
 ```
 
 ### Medium (3+ files, implementation)
 ```
-ctx/gemini → Task(aria-coder, haiku) → quality-gate.sh
+just ctx/gemini → Task(aria-coder, sonnet) → just q
 ```
 
 ### Complex (architecture, multi-system)
 ```
-Task(Explore) + Task(system-architect)  [parallel, haiku]
+Task(Explore, opus) + Task(system-architect, opus)  [parallel, planning phase]
         ↓
-Task(aria-coder) + Task(aria-qa)        [parallel, haiku]
+Task(aria-coder, sonnet) + Task(aria-qa, sonnet)   [parallel, implementation phase]
         ↓
-quality-gate.sh
+just q
 ```
 
 ### UI Requests (modify existing UI)
 ```
-Task(aria-ui-ux, opus) → quality-gate.sh
+Task(aria-ui-ux, opus) → just q
 ```
 Use Claude Opus for UI work - better visual/UX reasoning.
 
@@ -70,7 +77,7 @@ Use Claude Opus for UI work - better visual/UX reasoning.
 │  • Creates final, polished design                     │
 └───────────────────────────────────────────────────────┘
                         ↓
-                 quality-gate.sh
+                     just q
 ```
 
 **Usage:** `/design "responsive dashboard with charts and filters"`
@@ -81,7 +88,7 @@ Use Claude Opus for UI work - better visual/UX reasoning.
 3. Claude extracts best elements, discards weak parts
 4. **Claude creates the FINAL refined design** (not just picking one)
 5. Implement Claude's refined design
-6. quality-gate.sh
+6. just q
 
 **Claude Opus is the LAST LINE - it improves upon all others.**
 
@@ -112,45 +119,49 @@ All planning is FREE - no Claude tokens until final review.
 ## External-First (ALL agents)
 | Task | Use | NEVER |
 |------|-----|-------|
-| Context | `ctx "query"` | Multiple Reads |
+| Context | `just ctx "query"` (or `ctx "query"`) | Multiple Reads |
 | Code gen | `codex-save.sh` | Inline generation |
 | Analysis | `ai.sh fast` | Claude analysis |
 | Planning | `/plan` (Gemini+Codex) | Manual planning |
-| Lint | `composer cs-check` / `npm run lint` | Guessing |
-| Test | `composer test` / `npm test` | Assuming pass |
-| Quality | `quality-gate.sh` | Skipping |
+| Lint | `just lint` / `composer cs-check` / `npm run lint` | Guessing |
+| Test | `just test` / `composer test` / `npm test` | Assuming pass |
+| Quality | `just q` / `quality-gate.sh` | Skipping |
 
-## CLI Execution (Haiku)
-All deterministic CLI commands route to Haiku agent:
+## CLI Execution (Haiku - Simple Tasks Only)
+Simple, mechanical CLI commands can use Haiku:
 ```bash
-# Pattern: Task(aria-admin, haiku) for CLI work
-Task(aria-admin, haiku, prompt:"Run: git add . && git commit -m 'msg' && git push")
-Task(aria-admin, haiku, prompt:"Run: winscp.com /script=deploy.txt")
-Task(aria-admin, haiku, prompt:"Run: composer install && composer test")
-Task(aria-admin, haiku, prompt:"Run: npm install && npm run build")
+# Pattern: Task(aria-admin, haiku) for simple CLI work
+Task(aria-admin, haiku, prompt:"Run: git status")
+Task(aria-admin, haiku, prompt:"Run: git add . && git commit -m 'msg'")
 ```
 
-**CLI commands (always Haiku):**
-- git (add, commit, push, pull, status)
-- winscp, rsync, scp (deployments)
-- composer, npm, yarn (package managers)
-- lint, test, typecheck (validation)
+**CLI commands that can use Haiku (simple, clearly-defined):**
+- git status, git add, git commit, git push (basic operations)
+- File operations (copy, move, delete)
+- Simple checks (file existence, directory listing)
+
+**Use Opus for:**
+- Any task requiring decision-making or analysis
+- Code generation or modification
+- Complex git operations (rebases, conflict resolution)
+- Deployment decisions
 
 ## Rules
-1. **FREE first**: Always try external tools before subagents
-2. **Haiku for CLI**: All deterministic commands via aria-admin (haiku)
-3. **Haiku default**: Never use opus unless task failed or explicitly complex
+1. **FREE first**: Always try external tools before subagents (prefer `just` commands)
+2. **Haiku for simple only**: Simple, mechanical tasks (git status, file ops)
+3. **Opus for coding**: All implementation, architecture, and analysis tasks
 4. **Parallel when independent**: Single message, multiple Task calls
 5. **Claude orchestrates only**: No code generation in main thread
-6. **Quality gate mandatory**: Every implementation ends with `quality-gate.sh`
+6. **Quality gate mandatory**: Every implementation ends with `just q`
 
 ## Agent Prompt Template
 ```
 EXTERNAL-FIRST: Use these before Claude processing:
-- ctx "query" / gemini @. for context
+- just ctx "query" (or ctx "query") / gemini @. for context
 - codex-save.sh for code generation
 - ai.sh fast for quick analysis
-- Run lint/test/quality-gate.sh for validation
+- Run just q / lint/test/quality-gate.sh for validation
+- Check just --list for available project commands
 ```
 
 Ready for task.

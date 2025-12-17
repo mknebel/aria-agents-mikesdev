@@ -1,0 +1,19 @@
+{
+  "winscp": {
+    "executable": "/mnt/c/Program Files (x86)/WinSCP/WinSCP.com",
+    "ini_path": "G:\\My Drive\\WinSCP\\WinSCP.ini",
+    "notes": "Profiles synced via Google Drive. WinSCP configured to use this path."
+  },
+  "deploy_sites": {
+    "lyk-admin": {
+      "winscp_session": "mpk-admin@LaunchYourKid.com",
+      "local": "/mnt/d/MikesDev/www/LaunchYourKid/LYK-Cake4-Admin/",
+      "remote": "/home/lyklive/public_html/admin/"
+    },
+    "lyk-register": {
+      "winscp_session": "mpk-register@launchyourkid.com",
+      "local": "/mnt/d/MikesDev/www/LaunchYourKid/LaunchYourKid-Cake4/",
+      "remote": "/home/lyklive/public_html/register/"
+    }
+  }
+}

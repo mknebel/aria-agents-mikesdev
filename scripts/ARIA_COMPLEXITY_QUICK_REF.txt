@@ -1,0 +1,204 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║          ARIA COMPLEXITY ASSESSMENT - QUICK REFERENCE                      ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+COMMAND FORMATS
+═════════════════════════════════════════════════════════════════════════════
+
+  aria-complexity.sh assess "task description" [error_file]
+  aria-complexity.sh debug "task description" [error_file]
+  aria-complexity.sh batch tasks_file.txt
+  aria-complexity.sh help
+
+QUICK EXAMPLES
+═════════════════════════════════════════════════════════════════════════════
+
+  $ aria-complexity.sh assess "Fix typo"
+  1
+
+  $ aria-complexity.sh assess "Refactor database API for multi-system sync"
+  3
+
+  $ aria-complexity.sh debug "Fix bug" /tmp/error.log
+  2
+  [DEBUG] Increase keywords found: 0
+  [DEBUG] Decrease keywords found: 1
+  [DEBUG] Error context found: +1 tier
+  [DEBUG] Final tier: 2
+
+TIER MAPPING
+═════════════════════════════════════════════════════════════════════════════
+
+  Tier 1  →  gpt-5.1-codex-mini (instant)
+             Best for: bug fixes, typos, simple patches
+
+  Tier 2  →  gpt-5.1 or gpt-5.1-codex (standard)
+             Best for: features, refactoring, moderate complexity
+
+  Tier 3  →  gpt-5.1-codex-max (complex)
+             Best for: architecture, multi-system, rewrites
+
+SCORING FACTORS
+═════════════════════════════════════════════════════════════════════════════
+
+  Base tier: 2 (standard)
+
+  Files mentioned:
+    +1 tier per 3 files (e.g., 4 files → +1 tier)
+    Matches: /path, ~/file, ./path, filename.ext
+
+  Increase complexity:
+    +1: refactor, rewrite, architecture
+    +1: database migration, API integration
+    +1: multi-system
+
+  Decrease complexity:
+    -1: fix, bug, typo, simple, quick
+    (Multiple occurrences stack)
+
+  Multi-system detection:
+    +1: 2 systems (db+api, api+frontend, etc.)
+    +2: 3+ systems (db+api+frontend+backend)
+    Systems: database, API, frontend, backend
+
+  Error context:
+    +1: if error file exists and has content
+
+  Clamping: Result always 1-3
+
+ASSESSMENT ALGORITHM
+═════════════════════════════════════════════════════════════════════════════
+
+  1. Start with base tier = 2
+  2. Add file count adjustment (+1 per 3 files)
+  3. Add/subtract keyword scores
+  4. Add multi-system detection bonus
+  5. Add error context bonus
+  6. Clamp to [1, 3]
+
+EXAMPLES WITH BREAKDOWN
+═════════════════════════════════════════════════════════════════════════════
+
+  Task: "Fix typo in README"
+  ──────────────────────────
+  Base: 2
+  Files: 0 (+0)
+  Keywords: fix, typo (-2)
+  Systems: 0 (+0)
+  Error: no (+0)
+  → Result: 2-2=0 → clamped to 1 ✓
+
+  Task: "Refactor database API for multi-system integration"
+  ──────────────────────────────────────────────────────────
+  Base: 2
+  Files: 0 (+0)
+  Keywords: refactor, multi-system (+2)
+  Systems: database, API (2 systems) (+1)
+  Error: no (+0)
+  → Result: 2+2+1=5 → clamped to 3 ✓
+
+  Task: "Implement feature in src/app.js src/lib.js src/api.js tests/app.test.js"
+  ──────────────────────────────────────────────────────────────────────────────
+  Base: 2
+  Files: 4 files → +1 tier
+  Keywords: 0 (+0)
+  Systems: API detected (+0)
+  Error: no (+0)
+  → Result: 2+1=3 ✓
+
+SOURCING IN SCRIPTS
+═════════════════════════════════════════════════════════════════════════════
+
+  #!/bin/bash
+  source ~/.claude/scripts/aria-complexity.sh
+
+  # Use directly
+  tier=$(aria_assess_complexity "Refactor API system")
+  echo "Tier: $tier"
+
+  # Route based on tier
+  case "$tier" in
+      1) echo "Use: gpt-5.1-codex-mini" ;;
+      2) echo "Use: gpt-5.1-codex" ;;
+      3) echo "Use: gpt-5.1-codex-max" ;;
+  esac
+
+ENVIRONMENT VARIABLES
+═════════════════════════════════════════════════════════════════════════════
+
+  ARIA_COMPLEXITY_DEBUG=1     Enable debug output
+
+  Example:
+    ARIA_COMPLEXITY_DEBUG=1 aria-complexity.sh assess "task"
+
+BATCH PROCESSING
+═════════════════════════════════════════════════════════════════════════════
+
+  Create tasks file:
+    $ cat > tasks.txt << EOF
+    Fix typo in README
+    Refactor auth system
+    Quick bug fix
+    EOF
+
+  Run batch:
+    $ aria-complexity.sh batch tasks.txt
+
+    Task Assessment Results
+    ════════════════════════════════════════════════════════════════
+    [ 1] Tier 1 (Simple (instant/codex-mini))
+         Task: Fix typo in README...
+
+    [ 2] Tier 3 (Complex (codex-max))
+         Task: Refactor auth system...
+
+    [ 3] Tier 1 (Simple (instant/codex-mini))
+         Task: Quick bug fix...
+
+RETURN CODES
+═════════════════════════════════════════════════════════════════════════════
+
+  0    Success - assessment completed
+  1    Invalid input (empty task description)
+  2    Error - unexpected failure
+
+OUTPUT
+═════════════════════════════════════════════════════════════════════════════
+
+  Normal mode:  Single digit (1, 2, or 3)
+  Debug mode:   Tier number + debug output to stderr
+  Batch mode:   Formatted table with results
+
+INTEGRATION WITH ARIA ROUTING
+═════════════════════════════════════════════════════════════════════════════
+
+  # Automatic routing based on complexity
+  tier=$(aria-complexity.sh assess "Your task")
+
+  case "$tier" in
+      1) aria route instant "Your task" ;;      # Fast, cheap
+      2) aria route code "Your task" ;;         # Standard
+      3) aria route complex "Your task" ;;      # Power
+  esac
+
+TROUBLESHOOTING
+═════════════════════════════════════════════════════════════════════════════
+
+  Script not found:
+    → chmod +x ~/.claude/scripts/aria-complexity.sh
+    → bash ~/.claude/scripts/aria-complexity.sh assess "task"
+
+  Incorrect tier:
+    → ARIA_COMPLEXITY_DEBUG=1 to see scoring breakdown
+    → Check keyword matches and system detection
+
+  Integration issues:
+    → source ~/.claude/scripts/aria-complexity.sh first
+    → Verify aria-state.sh is available
+
+LOCATION
+═════════════════════════════════════════════════════════════════════════════
+
+  Main script:      ~/.claude/scripts/aria-complexity.sh
+  Documentation:    ~/.claude/scripts/ARIA_COMPLEXITY_README.md
+  This reference:   ~/.claude/scripts/ARIA_COMPLEXITY_QUICK_REF.txt

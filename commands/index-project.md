@@ -3,13 +3,15 @@ description: Index project for fast search (builds Index V2)
 argument-hint: [path] [--full]
 ---
 
-# Index Project
-
 Build or update the project index for fast, accurate searches.
+
+```bash
+~/.claude/scripts/index-v2/build-index.sh "${ARGUMENTS:-.}"
+```
 
 ## Usage
 
-```bash
+```
 # Index current project (incremental - only changed files)
 /index-project
 
@@ -18,12 +20,6 @@ Build or update the project index for fast, accurate searches.
 
 # Full rebuild (ignore existing index)
 /index-project --full
-```
-
-## Run Command
-
-```bash
-~/.claude/scripts/index-v2/build-index.sh "${ARGUMENTS:-.}"
 ```
 
 ## What Gets Indexed

@@ -7,6 +7,17 @@ tools: Read, Write, Edit, MultiEdit, LS, Glob, Grep
 
 # ARIA Docs
 
+## Justfile-First
+
+**Document justfile commands in CLAUDE.md:**
+```bash
+just --list               # See all commands to document
+just -g --list            # See global commands
+```
+
+When writing docs, prefer referencing justfile commands over raw commands.
+Example: "Deploy with `just deploy-prod`" not "Run WinSCP with..."
+
 ## Types
 | Type | Purpose |
 |------|---------|

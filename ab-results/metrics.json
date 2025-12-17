@@ -1,0 +1,18 @@
+{
+  "tests": [
+    {
+      "timestamp": "20251205_050846",
+      "task": "Write a bash function to calculate weighted similarity score between two code files. Input: file1, file2, weights for: line overlap, keyword match, structure match. Output: score 0-100. Keep it under 30 lines.",
+      "models": "codex,gemini,fast",
+      "winner": "fast",
+      "status": "weak_consensus",
+      "score": 75,
+      "similarity": 2,
+      "times": {
+        "fast": 24.252700933,
+        "gemini": 40.935382077
+      }
+    }
+  ],
+  "summary": {}
+}

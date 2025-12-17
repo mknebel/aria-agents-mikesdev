@@ -1,0 +1,42 @@
+**Bash function – weighted similarity score (≤ 30 lines)**  
+
+```bash
+weighted_similarity() {
+  local f1="$1" f2="$2" w1="$3" w2="$4" w3="$5"
+  [ $# -lt 5 ] && { echo "Usage: weighted_similarity file1 file2 w_line w_keyword w_structure"; return 1; }
+
+  # ----- line overlap -----
+  local l1=$(wc -l <"$f1"); local l2=$(wc -l <"$f2")
+  local common=$(comm -12 <(sort "$f1") <(sort "$f2") | wc -l)
+  local min_l=$((l1<l2?l1:l2)); local s1=$((min_l>0?common*100/min_l:0))
+
+  # ----- keyword match -----
+  local kw1c=$(grep -oE '\b\w+\b' "$f1" | sort -u | wc -l)
+  local kw2c=$(grep -oE '\b\w+\b' "$f2" | sort -u | wc -l)
+  local kw_common=$(comm -12 <(grep -oE '\b\w+\b' "$f1" | sort -u) \
+                        <(grep -oE '\b\w+\b' "$f2" | sort -u) | wc -l)
+  local min_kw=$((kw1c<kw2c?kw1c:kw2c)); local s2=$((min_kw>0?kw_common*100/min_kw:0))
+
+  # ----- structure match (brace/paren lines) -----
+  local bl1=$(grep -nE '[{}()]' "$f1" | cut -d: -f1 | sort -u)
+  local bl2=$(grep -nE '[{}()]' "$f2" | cut -d: -f1 | sort -u)
+  local struct_common=$(comm -12 <(printf '%s\n' "$bl1") <(printf '%s\n' "$bl2") | wc -l)
+  local s3=$((min_l>0?struct_common*100/min_l:0))
+
+  # ----- weighted average -----
+  local total_w=$((w1+w2+w3)); [ $total_w -eq 0 ] && echo 0 && return
+  local score=$(((s1*w1 + s2*w2 + s3*w3)/total_w))
+  echo "$score"
+}
+```
+
+**How it works**
+
+| Metric | Calculation | Normalised score (0‑100) |
+|--------|-------------|--------------------------|
+| Line overlap | `common_lines / min(line_counts)` | `common * 100 / min_l` |
+| Keyword match | `common_keywords / min(unique_keywords)` | `kw_common * 100 / min_kw` |
+| Structure match | `common_brace_lines / min(line_counts)` | `struct_common * 100 / min_l` |
+
+The three scores are combined using the supplied weights (`w1`, `w2`, `w3`) and returned as an integer between 0 and 100.  
+The function stays well under 30 lines and uses only standard Unix utilities (`wc`, `sort`, `comm`, `grep`, `cut`).

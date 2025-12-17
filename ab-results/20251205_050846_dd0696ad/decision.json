@@ -1,0 +1,8 @@
+{
+  "status": "weak_consensus",
+  "winner": "fast",
+  "winner_score": 75,
+  "avg_similarity": 2,
+  "solutions": 3,
+  "auto_apply_safe": false
+}

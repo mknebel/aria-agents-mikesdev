@@ -7,6 +7,18 @@ tools: Read, Grep, Glob, Bash
 
 # Code Review
 
+## Justfile-First
+
+**Use justfile for reviews:**
+```bash
+just gd                 # Git diff (better formatting)
+just lint               # Run linter before review
+just test               # Verify tests pass
+just q                  # Full quality gate
+```
+
+Always run `just q` before approving code.
+
 ## Process
 `git diff HEAD` → Understand patterns → Review for correctness/security
 

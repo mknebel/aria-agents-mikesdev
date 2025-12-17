@@ -1,0 +1,21 @@
+{
+  "sites": {
+    "lyk-admin": {
+      "description": "LaunchYourKid Admin Panel (Production)",
+      "winscp_session": "Clients/LYK/mpk-admin@LaunchYourKid.com",
+      "local_base": "D:\\MikesDev\\www\\LaunchYourKid\\LYK-Cake4-Admin\\",
+      "remote_base": ".",
+      "hostkey": "ssh-ed25519 255 j1/nXLfZ2OiWbMNPn/TIc1x7PyjlTwhe/IXE+15JleM",
+      "project": "LYK-Cake4-Admin"
+    },
+    "lyk-register": {
+      "description": "LaunchYourKid Public/Register Site (Production)",
+      "winscp_session": "Clients/LYK/mpk-register@launchyourkid.com",
+      "local_base": "D:\\MikesDev\\www\\LaunchYourKid\\LaunchYourKid-Cake4\\register\\",
+      "remote_base": "/public_html/",
+      "hostkey": "ssh-ed25519 255 j1/nXLfZ2OiWbMNPn/TIc1x7PyjlTwhe/IXE+15JleM",
+      "project": "LaunchYourKid-Cake4"
+    }
+  },
+  "workflow": "Confirm site ONCE per session, then deploy without prompts"
+}

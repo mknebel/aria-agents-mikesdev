@@ -118,6 +118,16 @@ List: file:line - what it does"
         call_openrouter "@preset/general-non-browser-tools" "$COMBINED" "🔧 Analyzing matches..."
         ;;
 
+    ab|ab-test|race)
+        # A/B test code generation across multiple models
+        ~/.claude/scripts/ab-test.sh "$PROMPT"
+        ;;
+
+    ab-report|ab-stats)
+        # Show A/B test metrics
+        ~/.claude/scripts/ab-metrics.sh report "$@"
+        ;;
+
     *)
         cat << 'HELP'
 AI Tool - Unified Interface
@@ -139,6 +149,10 @@ Agents:
   explore - Code explorer (search/read tools)
   search  - Search codebase + analyze
   agent   - Browser automation
+
+A/B Testing:
+  ab      - Race multiple models, pick winner
+  ab-report - Show win rates and metrics
 
 Output: /tmp/claude_vars/{tool}_last
 HELP

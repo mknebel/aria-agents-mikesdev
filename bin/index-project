@@ -1,0 +1,3 @@
+#!/bin/bash
+# Index project for fast search (Index V2)
+exec ~/.claude/scripts/index-v2/build-index.sh "${@:-.}"

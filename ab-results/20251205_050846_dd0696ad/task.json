@@ -1,0 +1,7 @@
+{
+  "task": "Write a bash function to calculate weighted similarity score between two code files. Input: file1, file2, weights for: line overlap, keyword match, structure match. Output: score 0-100. Keep it under 30 lines.",
+  "context": "",
+  "models": "codex,gemini,fast",
+  "timestamp": "20251205_050846",
+  "auto_apply": false
+}
