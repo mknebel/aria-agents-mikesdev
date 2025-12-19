@@ -86,7 +86,11 @@ ARIA routing (context-first pattern):
 - ALWAYS: aria route context "gather context for X" (Gemini 1M context)
 - THEN: aria route code "implement X" (using context above)
 - THEN: aria route test "run tests" (using context above)
+- THEN: aria route code "commit and push changes" (Gemini handles git)
 - Use Gemini as context layer, return results to agents
+
+Gemini Fast handles (FREE, super fast):
+- Code implementation, testing, git commits, prod pushes
 
 Aliases: cx, s, t, st, ci, co, lg, br, l, f, r
 Run: just --list
@@ -144,6 +148,8 @@ aria route context "gather all payment-related code and patterns"
 # Then route execution based on complexity
 aria route code "implement feature using context above"    # Gemini 3 Flash (FREE)
 aria route test "run tests"                                # Gemini 3 Flash (FREE)
+aria route code "commit changes with message"              # Gemini 3 Flash (FREE, fast!)
+aria route code "push to production"                       # Gemini 3 Flash (FREE, fast!)
 aria route general "explain architecture"                  # GPT-5.1
 aria route complex "solve hard bug"                        # GPT-5.1 Codex Max
 aria route max "redesign system"                           # GPT-5.2
@@ -169,6 +175,8 @@ aria route models
 2. **Then execute with appropriate agent:**
    - Simple code → `aria route code` (Gemini 3 Flash - FREE)
    - Testing → `aria route test` (Gemini 3 Flash - FREE)
+   - **Git commits** → `aria route code` (Gemini 3 Flash - FREE, super fast)
+   - **Production pushes** → `aria route code` (Gemini 3 Flash - FREE, super fast)
    - General reasoning → `aria route general` (GPT-5.1)
    - Complex code → `aria route complex` (GPT-5.1 Codex Max)
    - Hardest problems → `aria route max` (GPT-5.2)
@@ -177,6 +185,7 @@ aria route models
 - User interaction and conversation
 - Multi-agent orchestration
 - Coordinating the context-first workflow
+- Complex decision-making that requires context from the session
 
 ### Token Savings with Context-First Pattern
 
