@@ -217,8 +217,36 @@ aria route models
 | `mysql -h 127.0.0.1 -u user -ppass db -e "SELECT..."` | `just db-carts` | 97% |
 | `rg --type php "function foo"` find files, read... | `just ctx "foo"` | 97% |
 | `git add . && git commit -m "..." && git push` | `just gcp "msg"` | 80% |
+| `cd ~/.claude && git add -A && git commit...` | `cd ~/.claude && just ci "msg"` | 95% |
 
 **Average token savings: 90%+ across all operations**
+
+### Managing ~/.claude Config Repo
+
+The `~/.claude` directory has its own justfile for managing the configuration repository:
+
+```bash
+cd ~/.claude
+
+# Ultra-short aliases (use these!)
+just st              # Git status
+just ci "message"    # Commit with auto-attribution
+just co "message"    # Commit and push
+just lg              # Git log (pretty, last 10)
+just df              # Git diff
+
+# Other useful commands
+just sync            # Pull + push
+just models          # Show ARIA models
+just session         # Show current ARIA session
+just info            # Config repo summary
+just backup          # Backup all configs
+
+# Full list
+just --list
+```
+
+**Token savings: 95%+ vs raw git commands**
 
 ## 📋 Project Patterns (LaunchYourKid)
 
