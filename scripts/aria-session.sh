@@ -6,8 +6,8 @@
 # Configuration
 SESSION_DIR="${HOME}/.claude/cache/sessions"
 CURRENT_LINK="${SESSION_DIR}/current"
-MAX_HISTORY_TURNS=${MAX_HISTORY_TURNS:-10}
-MAX_CONTEXT_TOKENS=${MAX_CONTEXT_TOKENS:-4000}
+MAX_HISTORY_TURNS=${MAX_HISTORY_TURNS:-50}
+MAX_CONTEXT_TOKENS=${MAX_CONTEXT_TOKENS:-100000}  # Increased for Gemini 3 Flash (1M context)
 SESSION_PREFIX="session_"
 
 # Colors for CLI output

@@ -41,10 +41,12 @@ MAGENTA='\033[0;35m'
 NC='\033[0m'
 
 # Model tier mapping (matches aria-route.sh tiers)
+# Updated to latest Gemini 3 and GPT-5.2 models (2025-12-19)
+# CONTEXT-FIRST: Gemini 3 Flash (1M context) gathers context for all tiers
 declare -A TIER_MODELS=(
-    [1]="gpt-5.1-codex-mini"     # Fast, cheap, Haiku replacement
-    [2]="gpt-5.1-codex"          # Balanced, code-optimized
-    [3]="gpt-5.1-codex-max"      # Maximum capability
+    [1]="gemini-3-flash"         # Context layer + execution (1M context, FREE)
+    [2]="gpt-5.1-codex-max"      # Complex code (receives pre-digested context from Gemini)
+    [3]="gpt-5.2"                # Maximum capability (receives pre-digested context from Gemini)
 )
 
 # Task type to initial route mapping

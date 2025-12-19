@@ -8,25 +8,25 @@ source ~/.claude/scripts/aria-session.sh 2>/dev/null
 # Session mode (set ARIA_NO_SESSION=1 to disable)
 ARIA_SESSION_ENABLED=${ARIA_SESSION_ENABLED:-1}
 
-# Model definitions with characteristics (Updated Dec 2025)
-# GPT-5.1 beats o3 on coding (74.9% vs 69.1%) AND math (94.6% vs 88.9%)
-# GPT-5.1 uses 50-80% fewer tokens than o-series
-# Source: Codex CLI model selector
+# Model definitions with characteristics (Updated 2025-12-19)
+# Latest Gemini 3 and GPT-5.2 models (verified with codex CLI)
+# CONTEXT-FIRST ARCHITECTURE: Gemini 3 Flash (1M context) gathers context, then routes to agents
 declare -A MODEL_INFO=(
-    # Context (FREE - always first)
-    ["context"]='gemini|1M+ context, analysis|FREE'
+    # Context Layer (FREE - ALWAYS USE FIRST) - Gemini 3 Flash with 1M token context
+    ["context"]='gemini-3-flash|Context layer: 1M tokens, searches, analysis|FREE'
 
-    # Instant tier (Haiku replacement - test these!)
-    ["instant"]='gpt-5.1-codex-mini|Fast, cheap, Haiku replacement|Pro sub'
-    ["quick"]='gpt-5.1:low|Quick responses, light reasoning|Pro sub'
+    # Instant tier (Haiku replacement)
+    ["instant"]='gemini-3-flash|Fast, cheap, Haiku replacement|FREE'
+    ["quick"]='gemini-3-flash|Quick responses, light reasoning|FREE'
 
-    # Standard tier (most tasks)
-    ["general"]='gpt-5.1|Broad knowledge, strong reasoning|Pro sub'
-    ["code"]='gpt-5.1-codex|Codex optimized|Pro sub'
+    # Standard tier - Gemini 3 Flash for fast execution with pre-gathered context
+    ["general"]='gpt-5.1|Broad knowledge, general reasoning|Pro sub'
+    ["code"]='gemini-3-flash|Code implementation (use after context)|FREE'
+    ["test"]='gemini-3-flash|Testing and verification (use after context)|FREE'
 
-    # Power tier (complex tasks)
-    ["complex"]='gpt-5.1-codex-max|Flagship, deep+fast reasoning|Pro sub'
-    ["max"]='gpt-5.1-codex-max:extra_high|Maximum reasoning depth|Pro sub'
+    # Power tier (complex tasks) - Use paid models with pre-digested context
+    ["complex"]='gpt-5.1-codex-max|Complex code (receives context from Gemini)|Pro sub'
+    ["max"]='gpt-5.2|Maximum capability (receives context from Gemini)|Pro sub'
 )
 
 # Reasoning level flags (append to model with -c reasoning=X)
@@ -34,13 +34,15 @@ declare -A MODEL_INFO=(
 # codex-mini: medium, high
 # gpt-5.1: low, medium, high
 
-# Claude-saving priority order:
-# 1. gemini (FREE) - context gathering, file analysis
-# 2. gpt-5.1-codex-mini (instant) - Haiku replacement for quick tasks
-# 3. gpt-5.1 (general) - standard tasks, broad knowledge
-# 4. gpt-5.1-codex (code) - code-optimized tasks
-# 5. gpt-5.1-codex-max (complex) - flagship for hard problems
-# 6. Claude Haiku - file operations only (if codex-mini doesn't work)
+# CONTEXT-FIRST ARCHITECTURE (Updated 2025-12-19):
+# 1. gemini-3-flash (FREE, 1M context) - ALWAYS gather context FIRST
+#    - Searches codebase, reads files, analyzes patterns
+#    - Returns summarized context to other agents
+# 2. gemini-3-flash (FREE) - code implementation, testing (using pre-gathered context)
+# 3. gpt-5.1 (Pro) - general reasoning (receives pre-digested context from Gemini)
+# 4. gpt-5.1-codex-max (Pro) - complex code (receives context from Gemini)
+# 5. gpt-5.2 (Pro) - maximum capability (receives context from Gemini)
+# 6. Claude Haiku - file operations fallback
 # 7. Claude Opus - UI/UX only (last resort)
 
 aria_get_model() {
@@ -50,7 +52,7 @@ aria_get_model() {
     if [[ -n "$info" ]]; then
         echo "$info" | cut -d'|' -f1
     else
-        echo "gpt-5.1-codex-max"
+        echo "gemini-3-flash"  # Default to Gemini 3 Flash for speed
     fi
 }
 
@@ -131,47 +133,52 @@ aria_show_models() {
     printf "  %-12s %-24s %-40s %s\n" "Type" "Model" "Best For" "Cost"
     echo "  ────────────────────────────────────────────────────────────────"
 
-    echo "  FREE TIER"
-    printf "  %-12s %-24s %-40s %s\n" "context" "gemini" "1M+ context, analysis" "FREE"
+    echo "  FREE TIER (Gemini 3 Flash - super fast!)"
+    printf "  %-12s %-24s %-40s %s\n" "context" "gemini-3-flash" "Searches, analysis, 1M+ context" "FREE"
+    printf "  %-12s %-24s %-40s %s\n" "instant" "gemini-3-flash" "Fast, cheap, quick tasks" "FREE"
+    printf "  %-12s %-24s %-40s %s\n" "quick" "gemini-3-flash" "Light reasoning, quick responses" "FREE"
+    printf "  %-12s %-24s %-40s %s\n" "code" "gemini-3-flash" "Code implementation (super fast)" "FREE"
+    printf "  %-12s %-24s %-40s %s\n" "test" "gemini-3-flash" "Testing and verification" "FREE"
     echo ""
-    echo "  INSTANT TIER (Haiku replacement - test these!)"
-    printf "  %-12s %-24s %-40s %s\n" "instant" "gpt-5.1-codex-mini" "Fast, cheap, quick tasks" "Pro sub"
-    printf "  %-12s %-24s %-40s %s\n" "quick" "gpt-5.1 (low)" "Light reasoning, quick responses" "Pro sub"
+    echo "  STANDARD TIER"
+    printf "  %-12s %-24s %-40s %s\n" "general" "gpt-5.1" "Broad knowledge, general reasoning" "Pro sub"
     echo ""
-    echo "  STANDARD TIER (most tasks)"
-    printf "  %-12s %-24s %-40s %s\n" "general" "gpt-5.1" "Broad knowledge, strong reasoning" "Pro sub"
-    printf "  %-12s %-24s %-40s %s\n" "code" "gpt-5.1-codex" "Code-optimized" "Pro sub"
-    echo ""
-    echo "  POWER TIER (complex tasks)"
-    printf "  %-12s %-24s %-40s %s\n" "complex" "gpt-5.1-codex-max" "Flagship, deep+fast reasoning" "Pro sub"
-    printf "  %-12s %-24s %-40s %s\n" "max" "codex-max (extra_high)" "Maximum reasoning depth" "Pro sub"
+    echo "  POWER TIER (complex tasks only)"
+    printf "  %-12s %-24s %-40s %s\n" "complex" "gpt-5.1-codex-max" "Complex code problems" "Pro sub"
+    printf "  %-12s %-24s %-40s %s\n" "max" "gpt-5.2" "Hardest problems, maximum capability" "Pro sub"
 
     echo ""
     echo ""
-    echo "  Priority Order:"
+    echo "  Context-First Architecture (optimized for tokens + speed):"
     echo "  ────────────────────────────────────────────────────────────────"
-    echo "  1. gemini           FREE, 1M+ context"
-    echo "  2. codex-mini       Haiku replacement (TEST vs Haiku!)"
-    echo "  3. gpt-5.1          General tasks"
-    echo "  4. gpt-5.1-codex    Code-optimized"
-    echo "  5. codex-max        Complex problems"
-    echo "  6. Haiku            File ops only (fallback)"
-    echo "  7. Opus             UI/UX only (last resort)"
+    echo "  1. gemini-3-flash      Context layer (1M tokens, FREE)"
+    echo "                         ↓ gathers context, returns to agents"
+    echo "  2. gemini-3-flash      Code/tests (receives context, FREE)"
+    echo "  3. gpt-5.1             General reasoning (receives context)"
+    echo "  4. gpt-5.1-codex-max   Complex code (receives context)"
+    echo "  5. gpt-5.2             Hardest problems (receives context)"
     echo ""
-    echo "  Usage:"
+    echo "  Usage Pattern (ALWAYS start with context):"
     echo "  ────────────────────────────────────────────────────────────────"
-    echo "  aria route context \"analyze codebase\"      # FREE"
-    echo "  aria route instant \"quick fix\"             # Fast (test vs Haiku)"
-    echo "  aria route general \"solve problem\"         # Standard"
-    echo "  aria route code \"implement feature\"        # Code-optimized"
-    echo "  aria route complex \"hard problem\"          # Power"
-    echo "  aria route max \"very hard problem\"         # Maximum reasoning"
+    echo "  # Step 1: ALWAYS gather context FIRST (Gemini 1M, FREE)"
+    echo "  aria route context \"gather all payment code and patterns\""
     echo ""
-    echo "  Reasoning Levels (codex CLI):"
+    echo "  # Step 2: Then route to appropriate agent"
+    echo "  aria route code \"implement feature\"         # Gemini (uses context)"
+    echo "  aria route test \"run tests\"                # Gemini (uses context)"
+    echo "  aria route general \"explain architecture\"  # GPT-5.1 (uses context)"
+    echo "  aria route complex \"solve hard bug\"        # Codex Max (uses context)"
+    echo "  aria route max \"redesign system\"           # GPT-5.2 (uses context)"
+    echo ""
+    echo "  💡 Key: Gemini's 1M context gathers everything, agents get summaries!"
+    echo ""
+    echo "  Available Codex Models (for reference):"
     echo "  ────────────────────────────────────────────────────────────────"
-    echo "  codex-max:  low, medium, high, extra_high"
-    echo "  codex-mini: medium, high"
-    echo "  gpt-5.1:    low, medium, high"
+    echo "  gpt-5.1-codex-max:  Complex code problems"
+    echo "  gpt-5.1-codex:      Standard codex"
+    echo "  gpt-5.1-codex-mini: Cheaper alternative"
+    echo "  gpt-5.2:            Latest frontier (hardest problems)"
+    echo "  gpt-5.1:            General reasoning"
     echo ""
 }
 
