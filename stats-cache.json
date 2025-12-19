@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastComputedDate": "2025-12-15",
+  "lastComputedDate": "2025-12-17",
   "dailyActivity": [
     {
       "date": "2025-11-29",
@@ -61,6 +61,18 @@
       "messageCount": 36,
       "sessionCount": 2,
       "toolCallCount": 5
+    },
+    {
+      "date": "2025-12-16",
+      "messageCount": 3633,
+      "sessionCount": 16,
+      "toolCallCount": 987
+    },
+    {
+      "date": "2025-12-17",
+      "messageCount": 1405,
+      "sessionCount": 5,
+      "toolCallCount": 365
     }
   ],
   "dailyModelTokens": [
@@ -124,6 +136,18 @@
       "tokensByModel": {
         "claude-sonnet-4-5-20250929": 942
       }
+    },
+    {
+      "date": "2025-12-16",
+      "tokensByModel": {
+        "claude-sonnet-4-5-20250929": 489612
+      }
+    },
+    {
+      "date": "2025-12-17",
+      "tokensByModel": {
+        "claude-sonnet-4-5-20250929": 170182
+      }
     }
   ],
   "modelUsage": {
@@ -137,34 +161,34 @@
       "contextWindow": 0
     },
     "claude-sonnet-4-5-20250929": {
-      "inputTokens": 3708,
-      "outputTokens": 48475,
-      "cacheReadInputTokens": 9838778,
-      "cacheCreationInputTokens": 1240974,
+      "inputTokens": 96365,
+      "outputTokens": 615612,
+      "cacheReadInputTokens": 305688732,
+      "cacheCreationInputTokens": 25118454,
       "webSearchRequests": 0,
       "costUSD": 0,
       "contextWindow": 0
     }
   },
-  "totalSessions": 129,
-  "totalMessages": 33213,
+  "totalSessions": 150,
+  "totalMessages": 38251,
   "longestSession": {
-    "sessionId": "0c68afe9-3d8e-4496-a9f9-45c8dae69364",
-    "duration": 85185627,
-    "messageCount": 562,
-    "timestamp": "2025-12-05T09:53:37.409Z"
+    "sessionId": "fc716ac4-beb7-464e-a360-8897374a1a22",
+    "duration": 155360169,
+    "messageCount": 1046,
+    "timestamp": "2025-12-16T03:34:55.402Z"
   },
   "firstSessionDate": "2025-11-29T03:59:33.113Z",
   "hourCounts": {
-    "0": 4,
+    "0": 5,
     "1": 5,
     "2": 7,
     "3": 10,
-    "4": 8,
+    "4": 9,
     "5": 6,
     "6": 3,
     "7": 2,
-    "8": 7,
+    "8": 10,
     "9": 4,
     "10": 6,
     "11": 1,
@@ -172,12 +196,12 @@
     "13": 2,
     "14": 17,
     "15": 8,
-    "16": 8,
-    "17": 5,
+    "16": 11,
+    "17": 7,
     "18": 3,
-    "20": 2,
-    "21": 3,
-    "22": 7,
-    "23": 4
+    "20": 3,
+    "21": 7,
+    "22": 11,
+    "23": 6
   }
 }

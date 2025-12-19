@@ -833,6 +833,7 @@ tools_menu() {
         echo -e "${GREEN}2)${RESET} Browse Folders and Launch Codex/Claude"
         echo -e "${GREEN}3)${RESET} Reload ~/.bashrc, Restart Menu (resume last Codex/Claude)"
         echo -e "${GREEN}4)${RESET} Edit Project List ($CONFIG_FILE)"
+        echo -e "${GREEN}5)${RESET} Reload shell and exit to command line"
         echo -e "${GREEN}B)${RESET} Back to Project List"
         echo -e "${RED}0) Exit${RESET}"
         echo
@@ -850,6 +851,13 @@ tools_menu() {
                 ;;
             4)
                 edit_projects_config
+                ;;
+            5)
+                reload_bashrc quiet
+                echo -e "${GREEN}Shell reloaded. Exiting to command line...${RESET}"
+                sleep 0.5
+                set_tab_title ""
+                launch_interactive_shell
                 ;;
             0)
                 set_tab_title ""
