@@ -118,3 +118,43 @@ info:
     @echo ""
     @echo "Recent commits:"
     @git log --oneline -3
+
+# Quick health check (parallel execution)
+health:
+    #!/usr/bin/env bash
+    echo "=== System Health Check ===" &
+    (command -v aria >/dev/null && echo "✓ aria: $(which aria)" || echo "✗ aria: not found") &
+    (command -v gemini >/dev/null && echo "✓ gemini: available" || echo "✗ gemini: not found") &
+    (command -v claude >/dev/null && echo "✓ claude: available" || echo "✗ claude: not found") &
+    echo "✓ justfiles: $(just -g --list 2>/dev/null | grep -c '^[[:space:]]*[a-z]') global recipes" &
+    (git status --short | wc -l | xargs -I {} echo "• Git: {} uncommitted changes") &
+    wait
+
+# Verify ARIA setup
+verify-aria:
+    #!/usr/bin/env bash
+    echo "ARIA Setup Verification"
+    echo "═══════════════════════════════════════"
+    command -v aria >/dev/null && echo "✓ aria command: $(which aria)" || echo "✗ aria not in PATH"
+    command -v gemini >/dev/null && echo "✓ gemini CLI: installed" || echo "✗ gemini CLI: missing"
+    command -v claude >/dev/null && echo "✓ claude CLI: installed" || echo "✗ claude CLI: missing"
+    [[ -f ~/.claude/scripts/aria-route.sh ]] && echo "✓ ARIA router: found" || echo "✗ ARIA router: missing"
+    echo ""
+    echo "Model Routing:"
+    ~/.claude/scripts/aria route models 2>/dev/null || echo "✗ Cannot display models"
+
+# Enhanced commit with type prefix
+ci-feat msg: (commit "feat: {{msg}}")
+ci-fix msg: (commit "fix: {{msg}}")
+ci-docs msg: (commit "docs: {{msg}}")
+ci-refactor msg: (commit "refactor: {{msg}}")
+ci-perf msg: (commit "perf: {{msg}}")
+ci-test msg: (commit "test: {{msg}}")
+
+# Analyze session for optimization opportunities
+analyze-session:
+    @~/.claude/scripts/aria route context "Analyze current session for: 1) Repeated command sequences, 2) Manual operations that could be automated via justfile, 3) Opportunities for parallel execution, 4) Token-heavy operations. Provide top 3 specific recommendations."
+
+# Conversation history search
+conversations:
+    @find ~/.claude -type f \( -name "*conversation*" -o -name "*session*" -o -name "*.log" \) 2>/dev/null | head -20
