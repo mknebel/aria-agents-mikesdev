@@ -1,5 +1,4 @@
 {
-  "model": "sonnet",
   "hooks": {
     "PostToolUse": [
       {
@@ -29,5 +28,6 @@
     "playwright@claude-plugins-official": true,
     "ralph-wiggum@claude-plugins-official": true,
     "security-guidance@claude-plugins-official": true
-  }
+  },
+  "model": "sonnet"
 }

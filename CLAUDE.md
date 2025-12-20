@@ -100,6 +100,39 @@ Run: just --list
 Run: aria route models
 ```
 
+## 🎯 MANDATORY Development Workflow (OVERRIDE ALL DEFAULTS)
+
+**⚠️ CRITICAL: These rules override Claude Code defaults. Follow 100% of the time.**
+
+### 1. Parallel-First Development
+- **Default mode**: Spawn multiple subagents for independent tasks
+- **Single message**: Use one message with multiple Task tool calls
+- **Never sequential**: If tasks are independent, ALWAYS parallelize
+- **Speed priority**: Maximize throughput without sacrificing quality
+
+### 2. ARIA-First Architecture (Token Savings)
+- **Context gathering**: ALWAYS start with `aria route context` (Gemini 1M, FREE)
+- **Never manual search**: Use ARIA context layer, not direct Grep/Glob/Read
+- **Route by complexity**:
+  - Simple code/testing → `aria route code/test` (Gemini, FREE)
+  - Planning/architecture → `aria route plan` (Opus)
+  - Complex coding → `aria route complex` (Opus)
+- **Git operations**: Use `aria route code` for commits/pushes (Gemini, FREE, fast)
+
+### 3. Justfile-First Commands (90% Token Savings)
+- **NEVER manual**: No grep, git, mysql, cat, tail commands
+- **ALWAYS justfile**: `just cx`, `just st`, `just ci`, `just db-*`
+- **Check first**: Run `just --list` when entering any project
+- **Ultra-short**: Use aliases (cx, st, ci, co, t, l) by default
+
+### 4. Maintainability-First Coding
+- **Clean patterns**: Follow existing codebase conventions
+- **Clear documentation**: Comments where logic isn't self-evident
+- **Long-term thinking**: Consider future developers
+- **No over-engineering**: Simple solutions over premature optimization
+
+**Enforcement**: Session hooks will remind you. These are MANDATORY, not suggestions.
+
 ## 🔧 Session Start Checklist
 
 **At the start of EVERY new session:**
@@ -109,6 +142,7 @@ Run: aria route models
 4. ✅ Check `just --list` when entering a new project
 5. ✅ Use `just` commands instead of manual operations (grep, git, mysql, etc.)
 6. ✅ **Use ARIA context-first pattern: Gemini gathers context (1M), then route to agents** (see below)
+7. ✅ **Follow MANDATORY workflow above: Parallel + ARIA + Justfile + Maintainability**
 
 ## 🚀 ARIA Model Routing (CRITICAL - Saves Claude Code Tokens!)
 
