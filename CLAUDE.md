@@ -137,7 +137,7 @@ Run: aria route models
 │ 2. Agent receives context and acts         │
 │    - Claude Code: Orchestration            │
 │    - Claude Opus: Planning & complex code  │
-│    - GPT-5.1: General reasoning            │
+│    - GPT-5.2: General reasoning (latest)   │
 │    - Gemini Flash: Simple code & testing   │
 └─────────────────────────────────────────────┘
 ```
@@ -149,14 +149,14 @@ Run: aria route models
 aria route context "gather all payment-related code and patterns"
 
 # Then route execution based on complexity
-aria route plan "design implementation approach"           # Claude Opus (planning)
-aria route code "implement feature using context above"    # Gemini 3 Flash (FREE)
-aria route test "run tests"                                # Gemini 3 Flash (FREE)
-aria route code "commit changes with message"              # Gemini 3 Flash (FREE, fast!)
-aria route code "push to production"                       # Gemini 3 Flash (FREE, fast!)
-aria route general "explain architecture"                  # GPT-5.1
-aria route complex "solve hard bug"                        # Claude Opus (complex coding)
-aria route max "redesign system"                           # Claude Opus (hard coding)
+aria route plan "design implementation approach"           # Claude Opus (latest, planning)
+aria route code "implement feature using context above"    # Gemini 3 Flash (latest, FREE)
+aria route test "run tests"                                # Gemini 3 Flash (latest, FREE)
+aria route code "commit changes with message"              # Gemini 3 Flash (latest, FREE, fast!)
+aria route code "push to production"                       # Gemini 3 Flash (latest, FREE, fast!)
+aria route general "explain architecture"                  # GPT-5.2 (latest GPT)
+aria route complex "solve hard bug"                        # Claude Opus (latest, complex coding)
+aria route max "redesign system"                           # Claude Opus (latest, hard coding)
 
 # Session management (100K token history across calls)
 aria-session.sh show          # View current session history
@@ -177,14 +177,14 @@ aria route models
    - Return summarized context
 
 2. **Then execute with appropriate agent:**
-   - Planning → `aria route plan` (Claude Opus - architecture & design)
-   - Simple code → `aria route code` (Gemini 3 Flash - FREE)
-   - Testing → `aria route test` (Gemini 3 Flash - FREE)
-   - **Git commits** → `aria route code` (Gemini 3 Flash - FREE, super fast)
-   - **Production pushes** → `aria route code` (Gemini 3 Flash - FREE, super fast)
-   - General reasoning → `aria route general` (GPT-5.1)
-   - Complex code → `aria route complex` (Claude Opus - advanced coding)
-   - Hard coding → `aria route max` (Claude Opus - hardest problems)
+   - Planning → `aria route plan` (Claude Opus - latest, architecture & design)
+   - Simple code → `aria route code` (Gemini 3 Flash - latest, FREE)
+   - Testing → `aria route test` (Gemini 3 Flash - latest, FREE)
+   - **Git commits** → `aria route code` (Gemini 3 Flash - latest, FREE, super fast)
+   - **Production pushes** → `aria route code` (Gemini 3 Flash - latest, FREE, super fast)
+   - General reasoning → `aria route general` (GPT-5.2 - latest GPT)
+   - Complex code → `aria route complex` (Claude Opus - latest, advanced coding)
+   - Hard coding → `aria route max` (Claude Opus - latest, hardest problems)
 
 **Only use Claude Code directly for:**
 - User interaction and conversation

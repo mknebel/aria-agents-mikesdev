@@ -22,8 +22,8 @@ declare -A MODEL_INFO=(
     ["instant"]='gemini-3-flash|Fast, cheap, Haiku replacement|FREE'
     ["quick"]='gemini-3-flash|Quick responses, light reasoning|FREE'
 
-    # Standard tier - Gemini 3 Flash for fast execution with pre-gathered context
-    ["general"]='gpt-5.1|Broad knowledge, general reasoning|Pro sub'
+    # Standard tier - Latest models for optimal performance
+    ["general"]='gpt-5.2|Broad knowledge, general reasoning (latest GPT)|Pro sub'
     ["code"]='gemini-3-flash|Code implementation (use after context)|FREE'
     ["test"]='gemini-3-flash|Testing and verification (use after context)|FREE'
 
@@ -41,10 +41,10 @@ declare -A MODEL_INFO=(
 # 1. gemini-3-flash (FREE, 1M context) - ALWAYS gather context FIRST
 #    - Searches codebase, reads files, analyzes patterns
 #    - Returns summarized context to other agents
-# 2. claude-opus (Claude sub) - planning and architecture
-# 3. gemini-3-flash (FREE) - code implementation, testing (using pre-gathered context)
-# 4. gpt-5.1 (Pro) - general reasoning (receives pre-digested context from Gemini)
-# 5. claude-opus (Claude sub) - complex code and hard coding (receives context from Gemini)
+# 2. claude-opus (Claude sub) - planning and architecture (latest Claude)
+# 3. gemini-3-flash (FREE) - code implementation, testing (latest Gemini)
+# 4. gpt-5.2 (Pro) - general reasoning (latest GPT, receives pre-digested context)
+# 5. claude-opus (Claude sub) - complex code and hard coding (latest Claude)
 # 6. Claude Haiku - file operations fallback
 
 aria_get_model() {
@@ -230,7 +230,7 @@ aria_show_models() {
     printf "  %-12s %-24s %-40s %s\n" "plan" "claude-opus" "Architecture, implementation planning" "Claude sub"
     echo ""
     echo "  STANDARD TIER"
-    printf "  %-12s %-24s %-40s %s\n" "general" "gpt-5.1" "Broad knowledge, general reasoning" "Pro sub"
+    printf "  %-12s %-24s %-40s %s\n" "general" "gpt-5.2" "Broad knowledge, general reasoning (latest)" "Pro sub"
     echo ""
     echo "  POWER TIER (complex tasks only)"
     printf "  %-12s %-24s %-40s %s\n" "complex" "claude-opus" "Complex code problems" "Claude sub"
@@ -240,14 +240,14 @@ aria_show_models() {
     echo ""
     echo "  Context-First Architecture (optimized for tokens + speed):"
     echo "  ────────────────────────────────────────────────────────────────"
-    echo "  1. gemini-3-flash      Context layer (1M tokens, FREE)"
+    echo "  1. gemini-3-flash      Context layer (1M tokens, FREE, latest)"
     echo "                         ↓ gathers context, returns to orchestrator"
-    echo "  2. claude-opus         Planning (receives context)"
+    echo "  2. claude-opus         Planning (receives context, latest Claude)"
     echo "                         ↓ creates implementation plan"
-    echo "  3. gemini-3-flash      Code/tests (executes plan, FREE)"
-    echo "  4. gpt-5.1             General reasoning (receives context)"
-    echo "  5. claude-opus         Complex code (receives context)"
-    echo "  6. claude-opus         Hardest problems, hard coding (receives context)"
+    echo "  3. gemini-3-flash      Code/tests (executes plan, FREE, latest)"
+    echo "  4. gpt-5.2             General reasoning (receives context, latest GPT)"
+    echo "  5. claude-opus         Complex code (receives context, latest Claude)"
+    echo "  6. claude-opus         Hardest problems, hard coding (latest Claude)"
     echo ""
     echo "  Usage Pattern (ALWAYS start with context → plan → execute):"
     echo "  ────────────────────────────────────────────────────────────────"
@@ -258,11 +258,11 @@ aria_show_models() {
     echo "  aria route plan \"design cart validation system\""
     echo ""
     echo "  # Step 3: Execute with appropriate agent"
-    echo "  aria route code \"implement feature\"         # Gemini (uses plan)"
-    echo "  aria route test \"run tests\"                # Gemini (uses plan)"
-    echo "  aria route general \"explain architecture\"  # GPT-5.1 (uses context)"
-    echo "  aria route complex \"solve hard bug\"        # Claude Opus (uses context)"
-    echo "  aria route max \"redesign system\"           # Claude Opus (uses context)"
+    echo "  aria route code \"implement feature\"         # Gemini (latest, uses plan)"
+    echo "  aria route test \"run tests\"                # Gemini (latest, uses plan)"
+    echo "  aria route general \"explain architecture\"  # GPT-5.2 (latest, uses context)"
+    echo "  aria route complex \"solve hard bug\"        # Claude Opus (latest, uses context)"
+    echo "  aria route max \"redesign system\"           # Claude Opus (latest, uses context)"
     echo ""
     echo "  💡 Key: Context → Planning → Execution for optimal results!"
     echo ""
