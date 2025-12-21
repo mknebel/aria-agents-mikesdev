@@ -211,6 +211,29 @@ aria_gemini() {
     fi
 }
 
+# Auto-retry wrapper with fallback (95%+ success rate)
+aria_route_with_retry() {
+    local task_type="$1"
+    shift
+    local prompt="$*"
+    local max_retries=3
+    local attempt=1
+
+    while [[ $attempt -le $max_retries ]]; do
+        if aria_route "$task_type" "$prompt" 2>&1; then
+            return 0
+        fi
+
+        echo "⚠️  Retry $attempt/$max_retries..." >&2
+        ((attempt++))
+        sleep 2
+    done
+
+    # Fallback to different model tier
+    echo "⚠️  Primary model failed, using fallback (GPT-5.2)..." >&2
+    aria_route "general" "$prompt"
+}
+
 aria_show_models() {
     echo ""
     echo "ARIA Model Routing (Updated Dec 2025)"

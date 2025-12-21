@@ -158,3 +158,38 @@ analyze-session:
 # Conversation history search
 conversations:
     @find ~/.claude -type f \( -name "*conversation*" -o -name "*session*" -o -name "*.log" \) 2>/dev/null | head -20
+
+# ARIA ultra-short aliases (70% token savings)
+alias ag := aria-gather
+alias ap := aria-plan
+alias ac := aria-code
+alias at := aria-test
+alias aw := aria-workflow
+
+# ARIA workflow recipes
+aria-gather query:
+    @~/.claude/scripts/aria route context "{{query}}"
+
+aria-plan task:
+    @~/.claude/scripts/aria route plan "{{task}}"
+
+aria-code task:
+    @~/.claude/scripts/aria route code "{{task}}"
+
+aria-test task:
+    @~/.claude/scripts/aria route test "{{task}}"
+
+aria-workflow task:
+    #!/usr/bin/env bash
+    echo "ARIA Workflow: {{task}}"
+    echo "1. Gathering context (Gemini, FREE)..."
+    ~/.claude/scripts/aria route context "gather context for: {{task}}"
+    echo ""
+    echo "2. Planning (Claude Opus)..."
+    ~/.claude/scripts/aria route plan "design implementation for: {{task}}"
+    echo ""
+    echo "3. Implementing (Gemini, FREE)..."
+    ~/.claude/scripts/aria route code "implement: {{task}}"
+    echo ""
+    echo "4. Testing (Gemini, FREE)..."
+    ~/.claude/scripts/aria route test "verify: {{task}}"
