@@ -159,6 +159,28 @@ analyze-session:
 conversations:
     @find ~/.claude -type f \( -name "*conversation*" -o -name "*session*" -o -name "*.log" \) 2>/dev/null | head -20
 
+# === ARIA PHASE 2 FEATURES ===
+
+# Parallel ARIA routing (3-5x faster for independent tasks)
+aria-parallel *tasks:
+    @~/.claude/scripts/aria-parallel.sh {{tasks}}
+
+# Semantic cache - find similar cached queries
+aria-cache-get query threshold="70":
+    @~/.claude/scripts/aria-semantic-cache.sh get "{{query}}" {{threshold}}
+
+# Clean expired semantic cache
+aria-cache-clean:
+    @~/.claude/scripts/aria-semantic-cache.sh clean
+
+# Compress old conversation history (saves tokens)
+aria-compress:
+    @~/.claude/scripts/aria-context-compress.sh compress
+
+# Auto-compress if session > threshold
+aria-auto-compress threshold="50":
+    @~/.claude/scripts/aria-context-compress.sh auto {{threshold}}
+
 # ARIA ultra-short aliases (70% token savings)
 alias ag := aria-gather
 alias ap := aria-plan
