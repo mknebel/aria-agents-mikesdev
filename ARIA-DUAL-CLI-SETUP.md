@@ -114,7 +114,7 @@ aria score               # Show efficiency score
 
 ## 📝 Session Management
 
-ARIA maintains a 100K token conversation history across calls:
+ARIA maintains a **1M token** conversation history across calls (upgraded Dec 2025):
 
 ```bash
 aria session show        # View full conversation history
@@ -123,6 +123,8 @@ aria session clear       # Clear history but keep session
 ```
 
 This allows models to reference previous context without re-explaining.
+
+**Note:** Session capacity increased from 100K to 1M tokens (10x) to leverage Gemini 3 Flash's full context window.
 
 ---
 

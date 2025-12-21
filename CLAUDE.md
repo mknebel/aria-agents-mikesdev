@@ -178,24 +178,29 @@ Run: aria route models
 
 ### ARIA Quick Reference
 
+**⚡ NEW: Ultra-Short Aliases (70% token savings) - Updated Dec 2025**
+
 ```bash
-# ALWAYS start with context gathering (Gemini 3 Flash - FREE, 1M context)
-aria route context "gather all payment-related code and patterns"
+# Ultra-short justfile aliases (RECOMMENDED - use these!)
+just ag "query"        # Context gathering (Gemini 1M, FREE)
+just ap "task"         # Planning (Claude Opus)
+just ac "task"         # Coding (Gemini FREE / Opus)
+just at "task"         # Testing (Gemini FREE)
+just aw "task"         # Full workflow (context→plan→code→test)
 
-# Then route execution based on complexity
-aria route plan "design implementation approach"           # Claude Opus (latest, planning)
-aria route code "implement feature using context above"    # Gemini 3 Flash (latest, FREE)
-aria route test "run tests"                                # Gemini 3 Flash (latest, FREE)
-aria route code "commit changes with message"              # Gemini 3 Flash (latest, FREE, fast!)
-aria route code "push to production"                       # Gemini 3 Flash (latest, FREE, fast!)
-aria route general "explain architecture"                  # GPT-5.2 (latest GPT)
-aria route complex "solve hard bug"                        # Claude Opus (latest, complex coding)
-aria route max "redesign system"                           # Claude Opus (latest, hard coding)
+# Traditional commands (still work, but verbose)
+aria route context "gather all payment-related code and patterns"  # Use: just ag "..."
+aria route plan "design implementation approach"                    # Use: just ap "..."
+aria route code "implement feature using context above"             # Use: just ac "..."
+aria route test "run tests"                                         # Use: just at "..."
+aria route general "explain architecture"                           # GPT-5.2 (latest GPT)
+aria route complex "solve hard bug"                                 # Claude Opus (complex)
+aria route max "redesign system"                                    # Claude Opus (hard coding)
 
-# Session management (100K token history across calls)
-aria-session.sh show          # View current session history
-aria-session.sh new           # Start new session
-aria-session.sh list          # List all sessions
+# Session management (1M token history across calls - upgraded Dec 2025)
+aria session show             # View current session history
+aria session new              # Start new session
+aria session list             # List all sessions
 
 # View all models
 aria route models
